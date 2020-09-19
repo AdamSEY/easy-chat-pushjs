@@ -10,7 +10,10 @@ const websocket = new App({
     firebaseAdminSdkPath: firebaseAdminSdkPath,// activating firebase notifications.
     firebaseDatabaseURL: databaseUrl, // // activating firebase notifications.
     slackURL: "https://hooks.slack.com/EXAMPLE/...",
-    jwtPublicKey: fs.readFileSync(path.dirname(__dirname) + './public.pem')
+    jwtPublicKey: fs.readFileSync(path.dirname(__dirname) + './public.pem'),
+    onMessageReceived: (decodedUserToken, websocketMessage)=>{
+        console.log({decodedUserToken, websocketMessage});
+    }
 });
 
 websocket.startServer();

@@ -1,7 +1,7 @@
 {
-  "name": "pusshyjs",
+  "name": "easy-chat-pushjs",
   "version": "1.0.0",
-  "description": "",
+  "description": "Push Notifications using websocket, support android, IOS and browser background notifications (FCM) and Slack notifications.",
   "main": "src/App.js",
   "author": "",
   "license": "ISC",
@@ -16,5 +16,21 @@
     "socket.io-p2p-server": "^1.2.0",
     "uuid": "^8.3.0",
     "zeromq": "^5.2.0"
-  }
+  },
+  "directories": {
+    "example": "examples"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AdamSEY/easy-chat-pushjs.git"
+  },
+  "keywords": [],
+  "bugs": {
+    "url": "https://github.com/AdamSEY/easy-chat-pushjs/issues"
+  },
+  "homepage": "https://github.com/AdamSEY/easy-chat-pushjs#readme"
 }

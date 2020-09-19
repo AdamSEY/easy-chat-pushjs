@@ -23,7 +23,8 @@ class App {
         this.options.onlyOneConnection = false; // weither you want to allow users to connect multiple times using the same token.
         this.options.version = 1.0; // used to invalidate old tokens when you want. if client version different than this. authenacation will fail.
         this.options.jwtPublicKey = null; // used to invalidate old tokens when you want. if client version different than this. authenacation will fail.
-
+        this.options.canPublish = null; // a callback function returns true or false, whether or not if the user can publish the chatRoomName
+        this.options.onMessageReceived = null // a callback function(decodedUserToken, messageObject), in case you want to do something when the server receive a message from a user when they emitting 'chat' event.
         this.options.firebaseAdminSdkPath = false; // if you want to enable Firebase Cloud Messaging, download your authentication file from firebase, settings/serviceaccounts/adminsdk
         this.options.firebaseDatabaseURL = false; // available on firebase.google.com ... settings/serviceaccounts/adminsdk
         // override options
@@ -59,13 +60,13 @@ class App {
         if (this.options.onlyOneConnection && socket.userInfo) {
             await client.delAsync(socket.userInfo.uniqueToken);
         }
-        //  await App.delPinnedMessage(socket.id,socket.userInfo.channelName,io);
+        //  await App.delPinnedMessage(socket.id,socket.userInfo.chatRoomName,io);
     }
 
     async connection(socket) {
         console.log('OnConnection Event Received');
 
-        const userInfo = socket.userInfo; // was set on authencation
+        const userInfo = socket.userInfo; // was set on authentication
 
         if (this.options.onlyOneConnection) {
             socket.conn.on('packet', async (packet) => {
@@ -110,67 +111,6 @@ class App {
         return next();
     }
 
-    usersInfo(io, userInfo) {
-        // count clients and send connected users
-        io.in(userInfo.channelName).clients((err, clients) => {
-            console.log('onconnection: getting total users and connected users');
-            // clients will be array of socket ids , currently available in given room
-            const clientsInfo = clients.map((value) => {
-                return io.sockets.connected[value].userInfo;
-            });
-            const users = {'total': clientsInfo.length, 'users': clientsInfo};
-            console.log('Total Connected:', clientsInfo.length);
-            io.to(userInfo.channelName).emit('users', users);
-        });
-
-    }
-
-    async flushAll() {
-        await client.flushall();
-    }
-
-    async delPinnedMessage(socketID, channelName, io) {
-        console.log('Deleting pinned message');
-        let message = await client.getAsync(channelName);
-        message = JSON.parse(message);
-        if (message && typeof message.by !== 'undefined' && message.by === socketID) {
-            console.log('Deleted pinned message');
-            await client.delAsync(channelName);
-            io.to(channelName).emit('pinned', null); // tell the clinet to remove pinnedMessage
-        }
-    }
-
-    async setPinnedMessage(channelName, socketID, pinnedMessage) {
-        if (typeof pinnedMessage === 'undefined') return;
-        console.log('Setting pinned message');
-        let isSet = await client.setAsync(channelName, JSON.stringify({
-            'by': socketID,
-            'message': pinnedMessage
-        }), 'NX'); // set pinnedmessage only if it's not already set
-        isSet = Boolean(isSet);
-        if (!isSet) console.log("Failed to set a pinnedMessage because it's already set"); else {
-            console.log('Successfully set pinned message');
-        }
-    }
-
-    async getPinnedMessage(io, channelName) {
-        console.log('Getting pinned message');
-        const pinned = await client.getAsync(channelName);
-        if (pinned) {
-            const data = JSON.parse(pinned);
-            console.log('Publishing pinned message', data.message);
-            io.to(channelName).emit('pinned', data.message);
-        }
-    }
-
-    async disconnectUser(socket, io, reason, channelName) {
-        io.to(channelName).emit('disconnect', reason);
-        socket.disconnect(true);
-    }
-
-
-
-    // ----
     startServer() {
         const io = require('socket.io')(server, {
             path: '/websocket',
@@ -191,16 +131,16 @@ class App {
         sock.on('message', (msg) => {
             /*
             msg: Object
-            channelName: string
+            roomName: string
             userId: string or false
             fcmTokens: array or false
             data: serverMessage object
              */
             const serverMessage = JSON.parse(msg);
             if (serverMessage.userId !== false) {
-                io.to("userroom:" + serverMessage.userId).emit('push', serverMessage.data);
+                io.to("userRoom:" + serverMessage.userId).emit('push', serverMessage.data);
             } else {
-                io.to(serverMessage.channelName).emit('push', serverMessage.data);
+                io.to(serverMessage.roomName).emit('push', serverMessage.data);// sending notification to a specific room
             }
 
             // sending fcm notification
@@ -237,27 +177,46 @@ class App {
 
             const userInfo = await this.connection(socket); // when user connect we authenticate them and returns
 
-          //  p2p(socket, null, userInfo.channelName, 'webrtc'); // init p2p connection. // enable for p2p i.e webRTC
+            //  p2p(socket, null, userInfo.chatRoomName, 'webrtc'); // init p2p connection. // enable for p2p i.e webRTC
 
             // disbaled, I think those should be implmented on frontend. they're working anyway, nothing incomplete.
             // await App.usersInfo(io, userInfo); // send users info
-            // await App.setPinnedMessage(userInfo.channelName,socket.id, userInfo.pinned);
-            // await App.getPinnedMessage(io,userInfo.channelName);
+            // await App.setPinnedMessage(userInfo.chatRoomName,socket.id, userInfo.pinned);
+            // await App.getPinnedMessage(io,userInfo.chatRoomName);
 
 
             console.log('joining push: ', userInfo.userId)
-            socket.join("userroom:" + userInfo.userId); // used to send a message to a sepecific user
-            socket.join(userInfo.channelName); // used to send a message a everyone in a specific room
+            socket.join("userRoom:" + userInfo.userId); // used to send a message to a specific user
+            for (const room of userInfo.rooms){
+                // user can join multiple rooms. for example: user can join a room called "Gender" as well as "male", you can push notification to both genders or just males.
+                socket.join(room); // used to send a message a everyone in a specific room
+            }
 
 
-            socket.on('chat', function (messageObj) { // chat message received
+
+            socket.on('chat',  (messageObj) => { // chat message received
                 console.log('chat message received');
-                if (userInfo.canPublish === true) {
-                    io.to(userInfo.channelName).emit('chat', messageObj);
+                if (typeof this.options.onMessageReceived === "function"){
+                    (async () => {
+                        this.options.onMessageReceived(userInfo,messageObj);
+                    })();
                 }
+
+                if (userInfo.chatRoomName){
+                    console.log('Publish to room members: ' + userInfo.chatRoomName + ' succeed');
+                    if (typeof this.options.onMessageReceived === "function"){
+                        (async () => {
+                            this.options.onMessageReceived(userInfo,messageObj);
+                        })();
+                    }
+                    io.to(userInfo.chatRoomName).emit('chat', messageObj);
+                }else{
+                    console.log('Publish to room members: ' + userInfo.chatRoomName + ' failed');
+                }
+
             })
 
-            //   App.disconnectUser(socket, io, 'too many users' , userInfo.channelName);
+            //   App.disconnectUser(socket, io, 'too many users' , "userRoom:" + userInfo.userId);
             console.log('new connection');
         });
 
@@ -267,6 +226,63 @@ class App {
 
 
     }
+
+    async flushAll() {
+        await client.flushall();
+    }
+    usersInfo(io, userInfo) {
+        // count clients and send connected users
+        io.in(userInfo.chatRoomName).clients((err, clients) => {
+            console.log('onconnection: getting total users and connected users');
+            // clients will be array of socket ids , currently available in given room
+            const clientsInfo = clients.map((value) => {
+                return io.sockets.connected[value].userInfo;
+            });
+            const users = {'total': clientsInfo.length, 'users': clientsInfo};
+            console.log('Total Connected:', clientsInfo.length);
+            io.to(userInfo.chatRoomName).emit('users', users);
+        });
+
+    }
+    async delPinnedMessage(socketID, chatRoomName, io) {
+        console.log('Deleting pinned message');
+        let message = await client.getAsync(chatRoomName);
+        message = JSON.parse(message);
+        if (message && typeof message.by !== 'undefined' && message.by === socketID) {
+            console.log('Deleted pinned message');
+            await client.delAsync(chatRoomName);
+            io.to(chatRoomName).emit('pinned', null); // tell the clinet to remove pinnedMessage
+        }
+    }
+    async setPinnedMessage(chatRoomName, socketID, pinnedMessage) {
+        if (typeof pinnedMessage === 'undefined') return;
+        console.log('Setting pinned message');
+        let isSet = await client.setAsync(chatRoomName, JSON.stringify({
+            'by': socketID,
+            'message': pinnedMessage
+        }), 'NX'); // set pinnedMessage only if it's not already set
+        isSet = Boolean(isSet);
+        if (!isSet) console.log("Failed to set a pinnedMessage because it's already set"); else {
+            console.log('Successfully set pinned message');
+        }
+    }
+    async getPinnedMessage(io, chatRoomName) {
+        console.log('Getting pinned message');
+        const pinned = await client.getAsync(chatRoomName);
+        if (pinned) {
+            const data = JSON.parse(pinned);
+            console.log('Publishing pinned message', data.message);
+            io.to(chatRoomName).emit('pinned', data.message);
+        }
+    }
+    async disconnectUser(socket, io, reason, roomName) {
+        io.to(roomName).emit('disconnect', reason);
+        socket.disconnect(true);
+    }
+
+
+
+
 }
 
 

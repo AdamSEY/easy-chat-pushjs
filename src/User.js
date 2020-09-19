@@ -21,15 +21,14 @@ class User{
         if (this.options.jwtPrivateKey === null) throw new SocketError('Jwt private key path is required, make sure to create JWT RS256 private key');
     }
 
-     createUserToken(channelName, canPublish, username, userId, uniqueToken = false ){
+     createUserToken(rooms, chatRoomName, userId, uniqueToken = false, extras = {} ){
 
         const jwtToken = {};
 
         jwtToken.userId = userId;
-        jwtToken.canPublish = canPublish;
-        jwtToken.channelName = channelName;
+        jwtToken.chatRoomName = chatRoomName; // this room user can publish messages by emitting "chat" event, anyone in the same room will receive this message.
+        jwtToken.rooms = rooms; // array of rooms
        // jwtToken.pinnedMessage = pinnedMessage;
-        jwtToken.username = username;
         jwtToken.joinTime = new Date().getTime();
         jwtToken.version = this.options.version; // change this to invalidate all previous tokens.
         jwtToken.uniqueToken = uniqueToken ? uniqueToken : uuid.v4(); // in case onlyOneConnection is enabled. if a user has the same token we don't allow them to join.
@@ -42,20 +41,23 @@ class User{
             'iat'  : issuedAt,         // Issued at: time when the token was generated
             'nbf' : issuedAt,
             'exp' : expire,           // Expire
-            ...jwtToken
+            ...jwtToken,
+            ...extras
     };
         return jwt.sign(data, this.options.jwtPrivateKey, { algorithm: 'RS256'});
     }
-     async pushNotification(channelName, data , userId = false ){
+     async pushNotification(roomName, data , userId = false ){
         // @fcmTokens: array of user fcm tokens.
         // @userId: if false, public will happen to everyone in a room
+         // Note: roomName can be null if userId is not false.
+
 
         return new Promise((resolve, reject) => {
           try {
               const sock = zmq.socket('push');
               sock.connect(this.options.zmqClientAddress);
               sock.send(JSON.stringify({
-                  channelName,
+                  roomName,
                   userId,
                   data:data
               }));
@@ -111,10 +113,10 @@ class User{
     }
 
 
-    static validateChannelName(channelName){
+    static validateRoomName(roomName){
         // /^([0-9a-z_]+\.)*([0-9a-z_]+)$/
         const regex = new RegExp(/^([0-9a-z_]+\.)*([0-9a-z_]+)$/);
-        return !!regex.test(channelName);
+        return !!regex.test(roomName);
     }
 
 
