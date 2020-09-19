@@ -1,4 +1,9 @@
-### Installation
+### npm Installation
+
+    `npm install --save easy-chat-pushjs`
+
+
+### Server Installation
 
 Install redis [required for onlyOneConnection feature]
 Install ZMQ [required to push notifications to the websocket server]
