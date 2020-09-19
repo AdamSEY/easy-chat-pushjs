@@ -1,5 +1,4 @@
 const jwt = require('jsonwebtoken');
-const fs = require('fs');
 const redis = require("redis");
 const bluebird = require('bluebird');
 const client = redis.createClient();
@@ -9,8 +8,8 @@ const server = require('http').createServer();
 const p2p = require('socket.io-p2p-server').Server;
 const Firebase = require('./Firebase');
 const Slack = require('./Slack');
-
-class App {
+const User = require('./User');
+class Server {
 
     constructor(options = {}) {
         // defaults
@@ -55,12 +54,12 @@ class App {
     }
 
     async disconnect(socket, io) {
-        //  App.usersInfo(io,socket.userInfo);
+        //  Server.usersInfo(io,socket.userInfo);
         console.log('user disconnected');
         if (this.options.onlyOneConnection && socket.userInfo) {
             await client.delAsync(socket.userInfo.uniqueToken);
         }
-        //  await App.delPinnedMessage(socket.id,socket.userInfo.chatRoomName,io);
+        //  await Server.delPinnedMessage(socket.id,socket.userInfo.chatRoomName,io);
     }
 
     async connection(socket) {
@@ -157,7 +156,7 @@ class App {
 
         });
 
-        //App.flushAll(); // required in case our nodejs crashed so we remove all the keys so our users can set pinned message. //disbaled since we're no longer using a pinned message.
+        //Server.flushAll(); // required in case our nodejs crashed so we remove all the keys so our users can set pinned message. //disbaled since we're no longer using a pinned message.
 
         // this way
 
@@ -180,9 +179,9 @@ class App {
             //  p2p(socket, null, userInfo.chatRoomName, 'webrtc'); // init p2p connection. // enable for p2p i.e webRTC
 
             // disbaled, I think those should be implmented on frontend. they're working anyway, nothing incomplete.
-            // await App.usersInfo(io, userInfo); // send users info
-            // await App.setPinnedMessage(userInfo.chatRoomName,socket.id, userInfo.pinned);
-            // await App.getPinnedMessage(io,userInfo.chatRoomName);
+            // await Server.usersInfo(io, userInfo); // send users info
+            // await Server.setPinnedMessage(userInfo.chatRoomName,socket.id, userInfo.pinned);
+            // await Server.getPinnedMessage(io,userInfo.chatRoomName);
 
 
             console.log('joining push: ', userInfo.userId)
@@ -216,7 +215,7 @@ class App {
 
             })
 
-            //   App.disconnectUser(socket, io, 'too many users' , "userRoom:" + userInfo.userId);
+            //   Server.disconnectUser(socket, io, 'too many users' , "userRoom:" + userInfo.userId);
             console.log('new connection');
         });
 
@@ -286,4 +285,7 @@ class App {
 }
 
 
-module.exports = App;
+module.exports = {
+    Server: Server,
+    User
+};
