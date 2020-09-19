@@ -15,16 +15,25 @@ class Firebase {
         });
     }
     sendMessage(tokens, title, body, imageUrl = null ,extras = {}) {
-
         const message = {
             data: extras,
             notification: {
                 title: title,
                 body: body,
             },
+            webpush: {
+                headers: {
+                    Urgency: "high"
+                },
+                "notification": {
+                    "body": body,
+                    "requireInteraction": true,
+                }
+            },
             tokens: tokens,
         }
-        if (imageUrl) message.notification.imageUrl = imageUrl;
+        if (imageUrl) message.webpush.notification.icon = imageUrl;
+        console.log(message.notification);
         return new Promise((resolve, reject) => {
             admin.messaging().sendMulticast(message).then((response) => {
                 console.log(response.successCount + ' messages were sent successfully');

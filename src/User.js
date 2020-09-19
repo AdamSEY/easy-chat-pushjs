@@ -56,6 +56,7 @@ class User{
           try {
               const sock = zmq.socket('push');
               sock.connect(this.options.zmqClientAddress);
+              sock.setsockopt( 'linger', 0 );
               sock.send(JSON.stringify({
                   roomName,
                   userId,
@@ -69,7 +70,7 @@ class User{
         })
 
     }
-     async pushFirebaseNotifications(fcmTokens, title, body, imageUrl = '', extras = {} ){
+     async pushFirebaseNotifications(fcmTokens, title, body, imageUrl = null, extras = {} ){
         // @fcmTokens: array of user fcm tokens.
         // @userId: if false, public will happen to everyone in a room
          // make sure configure firebase before using this, else it won't work
@@ -78,6 +79,7 @@ class User{
           try {
               const sock = zmq.socket('push');
               sock.connect(this.options.zmqClientAddress);
+              sock.setsockopt( 'linger', 0 );
               sock.send(JSON.stringify({
                   fcmTokens,
                   title,
@@ -100,6 +102,7 @@ class User{
           try {
               const sock = zmq.socket('push');
               sock.connect(this.options.zmqClientAddress);
+              sock.setsockopt( 'linger', 0 );
               sock.send(JSON.stringify({
                 slackMessage: markdownMessage
               }));

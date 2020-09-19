@@ -20,8 +20,12 @@
   "directories": {
     "example": "examples"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "typescript": "^4.0.3",
+    "why-is-node-running": "^2.2.0"
+  },
   "scripts": {
+    "build": "tsc",
     "test": "mocha"
   },
   "repository": {

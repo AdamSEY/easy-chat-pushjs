@@ -1,7 +1,6 @@
 const jwt = require('jsonwebtoken');
 const redis = require("redis");
 const bluebird = require('bluebird');
-const client = redis.createClient();
 bluebird.promisifyAll(redis);
 const zmq = require("zeromq");
 const server = require('http').createServer();
@@ -14,6 +13,7 @@ class Server {
     constructor(options = {}) {
         // defaults
         this.options = {}
+        this.redisClient = redis.createClient();
         this.options.zmqServerAddress = 'tcp://127.0.0.1:3500';
         this.options.wsPort = 3000;
         this.options.pingInterval = 10000;
@@ -57,11 +57,10 @@ class Server {
         //  Server.usersInfo(io,socket.userInfo);
         console.log('user disconnected');
         if (this.options.onlyOneConnection && socket.userInfo) {
-            await client.delAsync(socket.userInfo.uniqueToken);
+            await this.redisClient.delAsync(socket.userInfo.uniqueToken);
         }
         //  await Server.delPinnedMessage(socket.id,socket.userInfo.chatRoomName,io);
     }
-
     async connection(socket) {
         console.log('OnConnection Event Received');
 
@@ -70,7 +69,7 @@ class Server {
         if (this.options.onlyOneConnection) {
             socket.conn.on('packet', async (packet) => {
                 if (socket.auth && packet.type === 'ping') {
-                    await client.setAsync(userInfo.uniqueToken, true, 'XX', 'EX', 15);
+                    await this.redisClient.setAsync(userInfo.uniqueToken, true, 'XX', 'EX', 15);
                 }
             });
         }
@@ -78,7 +77,6 @@ class Server {
 
         return userInfo;
     }
-
     async authMiddleware(socket, next) {
         console.log('Auth middleware reached')
         const authToken = socket.handshake.query.token;
@@ -94,7 +92,7 @@ class Server {
         }
         if (this.options.onlyOneConnection === true) {
             console.log('OnlyOneConnection mode is enabled')
-            const canConnect = await client.setAsync(userInfo.uniqueToken, true, 'NX', 'EX', 15);
+            const canConnect = await this.redisClient.setAsync(userInfo.uniqueToken, true, 'NX', 'EX', 15);
             // Expire is important because if we couldn't remove the token the user won't be able to connect anymore
             // we will renew that time using socketIO pings, in case server shut down and we didn't receive onDisconnet event
             // update: maybe not required since we're flushing all the keys in case our app crashed.
@@ -144,7 +142,7 @@ class Server {
 
             // sending fcm notification
             if (fcm && serverMessage.hasOwnProperty('fcmTokens')) {
-                const d = fcm.sendMessage(serverMessage.fcmTokens, serverMessage.title, serverMessage.body, serverMessage.imageUrl, serverMessage.data);
+                const d = fcm.sendMessage(serverMessage.fcmTokens, serverMessage.title, serverMessage.body, serverMessage.imageUrl , serverMessage.data);
                 console.log('fcm message queued');
             }
             // sending slack message
@@ -227,7 +225,7 @@ class Server {
     }
 
     async flushAll() {
-        await client.flushall();
+        await this.redisClient.flushall();
     }
     usersInfo(io, userInfo) {
         // count clients and send connected users
@@ -245,18 +243,18 @@ class Server {
     }
     async delPinnedMessage(socketID, chatRoomName, io) {
         console.log('Deleting pinned message');
-        let message = await client.getAsync(chatRoomName);
+        let message = await this.redisClient.getAsync(chatRoomName);
         message = JSON.parse(message);
         if (message && typeof message.by !== 'undefined' && message.by === socketID) {
             console.log('Deleted pinned message');
-            await client.delAsync(chatRoomName);
+            await this.redisClient.delAsync(chatRoomName);
             io.to(chatRoomName).emit('pinned', null); // tell the clinet to remove pinnedMessage
         }
     }
     async setPinnedMessage(chatRoomName, socketID, pinnedMessage) {
         if (typeof pinnedMessage === 'undefined') return;
         console.log('Setting pinned message');
-        let isSet = await client.setAsync(chatRoomName, JSON.stringify({
+        let isSet = await this.redisClient.setAsync(chatRoomName, JSON.stringify({
             'by': socketID,
             'message': pinnedMessage
         }), 'NX'); // set pinnedMessage only if it's not already set
@@ -267,7 +265,7 @@ class Server {
     }
     async getPinnedMessage(io, chatRoomName) {
         console.log('Getting pinned message');
-        const pinned = await client.getAsync(chatRoomName);
+        const pinned = await this.redisClient.getAsync(chatRoomName);
         if (pinned) {
             const data = JSON.parse(pinned);
             console.log('Publishing pinned message', data.message);
@@ -286,6 +284,6 @@ class Server {
 
 
 module.exports = {
-    Server: Server,
+    Server,
     User
 };
