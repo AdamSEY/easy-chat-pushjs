@@ -1,11 +1,11 @@
-const {Server} = require('../src/Server');
+const server = require('../src/Server').default;
 const path = require('path');
 const fs = require('fs');
 
 const firebaseAdminSdkPath = path.dirname(__dirname) + '/firebase_admin_sdk.json'; // get the file from firebase -> settings -> Service Account -> Firebase admin sdk.
 const databaseUrl = 'https://EXAMPLE.firebaseio.com' // get the file from firebase -> settings -> Service Account -> Firebase admin sdk.
 
-const websocket = new Server({
+const websocket = new server({
     version: 1.0,
     firebaseAdminSdkPath: firebaseAdminSdkPath,// activating firebase notifications.
     firebaseDatabaseURL: databaseUrl, // // activating firebase notifications.

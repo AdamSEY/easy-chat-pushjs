@@ -1,4 +1,4 @@
-const User = require('../src/User');
+const User = require('../lib/User').default;
 const fs = require('fs');
 const path = require('path');
 

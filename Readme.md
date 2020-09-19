@@ -33,4 +33,10 @@ optionally you can enable FCM and Slack API if you're planning to use them.
 
 
 
+----
 
+Next:
+Make sure everything is working
+learn imports / exports
+use babel in defualt with nodejs and learn how does it work
+server class exporting isn't working.
