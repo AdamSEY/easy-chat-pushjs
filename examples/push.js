@@ -1,10 +1,10 @@
-const User = require('../lib/User').default;
+const User = require('easy-chat-pushjs').User;
 const fs = require('fs');
 const path = require('path');
 
 const user = new User({
     version: 1.0,
-    jwtPrivateKey: fs.readFileSync(path.dirname(__dirname) + '/databases/private.key')
+    jwtPrivateKey: fs.readFileSync(path.dirname(__dirname) + '/private.key')
 });
 
 const token = user.createUserToken(['gender', 'male'] , null, 'dasfasdasd2342', {username: 'admin'});

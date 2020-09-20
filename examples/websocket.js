@@ -1,4 +1,4 @@
-const server = require('../src/Server').default;
+const server = require('easy-chat-pushjs').Server;
 const path = require('path');
 const fs = require('fs');
 
