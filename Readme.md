@@ -30,12 +30,11 @@ Install ZMQ [required to push notifications to the websocket server]
 
 
     const User = require('easy-chat-pushjs').User;
-    const fs = require('fs');
     const path = require('path');
 
     const user = new User({
         version: 1.0, // used to invalidate the old tokens (must match the server version)
-        jwtPrivateKey: fs.readFileSync(path.dirname(__dirname) + '/private.key') // jwt private key to encrypt the token.
+        jwtPrivateKey: path.dirname(__dirname) + '/private.key' // absoulte path to the "jwt private key", used to encrypt the token.
     });
 
 create token, client/ frontend gonna use this to connect to the websocket.

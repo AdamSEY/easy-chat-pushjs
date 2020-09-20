@@ -5,11 +5,11 @@ bluebird.promisifyAll(redis);
 const zmq = require('zeromq');
 const server = require('http').createServer();
 const p2p = require('socket.io-p2p-server').Server;
-// const Firebase = require('./Firebase');
 import Firebase from './Firebase';
 import SocketError from "./SocketError";
 import {UserObj} from "./UserObj";
 const Slack = require('./Slack');
+const fs = require('fs');
 
 
 
@@ -17,7 +17,7 @@ interface optionsObj {
     firebaseDatabaseURL?:  string;
     firebaseAdminSdkPath?:  string;
     onMessageReceived?: Function;
-    jwtPublicKey: string | Buffer;
+    jwtPublicKey: Buffer;
     version?: number;
     onlyOneConnection?: boolean;
     slackURL?: null | string;
@@ -56,7 +56,7 @@ export class Server {
     }
 
     decodeJWT(token: string) {
-        const publicKey = this.options.jwtPublicKey;
+        const publicKey = fs.readFileSync(this.options.jwtPublicKey);
         let decoded;
         try {
             decoded = jwt.verify(token, publicKey);

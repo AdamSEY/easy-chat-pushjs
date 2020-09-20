@@ -1,11 +1,13 @@
+import SocketError from "./SocketError";
 const jwt = require('jsonwebtoken');
 const zmq = require('zeromq');
 const uuid = require('uuid');
+const fs = require('fs');
 import {UserObj} from "./UserObj";
 
 
 interface clientOptionsObj {
-    jwtPrivateKey: string| Buffer;
+    jwtPrivateKey: Buffer;
     version?: number;
     jwtExpireSeconds?: number;
     zmqClientAddress?: string;
@@ -28,6 +30,9 @@ export class User {
                 this.options[option] = options[option];
             }
         }
+
+        if (this.options.jwtPrivateKey === null)
+            throw new SocketError('jwtPrivateKey should be Buffer, make sure to create JWT RS256 key pair and set the path.');
 
     }
 
@@ -56,7 +61,7 @@ export class User {
             ...jwtToken,
             ...extras,
         };
-        return jwt.sign(data, this.options.jwtPrivateKey, { algorithm: 'RS256' });
+        return jwt.sign(data, fs.readFileSync(this.options.jwtPrivateKey), { algorithm: 'RS256' });
     }
     async pushNotification(roomName: null | string, data: object, userId : string | null = null) {
         // @fcmTokens: array of user fcm tokens.
