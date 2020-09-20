@@ -29,7 +29,7 @@ interface optionsObj {
 
 
 
-export default class {
+export class Server {
     private readonly options: optionsObj;
     private redisClient: any;
     constructor(options: optionsObj) {

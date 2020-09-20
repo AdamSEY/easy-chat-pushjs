@@ -11,7 +11,7 @@ interface clientOptionsObj {
     zmqClientAddress?: string;
 }
 
-export default class User {
+export class User {
     private readonly options: clientOptionsObj;
     constructor(options : clientOptionsObj) {
         // defaults
