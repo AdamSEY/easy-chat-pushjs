@@ -169,7 +169,7 @@ export class Server {
                 console.log('fcm message queued');
             }
             // sending slack message
-            if (this.options.slackURL && serverMessage.hasOwnProperty('slackMessage') && typeof this.options.slackURL === 'string') {
+            if (this.options.slackURL && serverMessage.hasOwnProperty('slackMessage')) {
                 Slack.sendSlackMessage(this.options.slackURL, serverMessage.slackMessage);
                 console.log('slack message queued');
             }
@@ -259,7 +259,7 @@ export class Server {
         if (message && typeof message.by !== 'undefined' && message.by === socketID) {
             console.log('Deleted pinned message');
             await this.redisClient.delAsync(chatRoomName);
-            io.to(chatRoomName).emit('pinned', null); // tell the clinet to remove pinnedMessage
+            io.to(chatRoomName).emit('pinned', null); // tell the client to remove pinnedMessage
         }
     }
     async setPinnedMessage(chatRoomName: string, socketID: string, pinnedMessage: string) {
