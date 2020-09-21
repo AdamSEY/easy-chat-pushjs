@@ -1,6 +1,6 @@
 {
   "name": "easy-chat-pushjs",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "description": "Push Notifications using websocket, support android, IOS and browser background notifications (FCM) and Slack notifications.",
   "main": "lib/index.js",
   "author": "",
@@ -28,9 +28,9 @@
   "scripts": {
     "build": "tsc",
     "test": "mocha",
-    "prepare" : "npm run build",
-    "version" : "git add -A",
-    "postversion" : "git push && git push --tags"
+    "prepare": "npm run build",
+    "version": "git add -A",
+    "postversion": "git push && git push --tags"
   },
   "repository": {
     "type": "git",
