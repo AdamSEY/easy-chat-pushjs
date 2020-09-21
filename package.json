@@ -29,7 +29,7 @@
     "build": "tsc",
     "test": "mocha",
     "prepare" : "npm run build",
-    "version" : "git add -A src",
+    "version" : "git add -A",
     "postversion" : "git push && git push --tags"
   },
   "repository": {
