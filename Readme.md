@@ -88,9 +88,9 @@ optionally you can enable FCM and Slack API if you're planning to use them.
 ### More Examples
 
 Take a look on the examples' directory, you'll find there:
-- How to start the websocket server. Check websocket.js
-- How to connect from frontend to the server and chat or receive push notifications. Check client.js
-- How to push notifications, push messages to slack and Android- IOS (FCM). Check push.js
+- How to start the websocket server. Check `websocket.js`
+- How to connect from frontend to the server and chat or receive push notifications. Check `client.js`
+- How to push notifications, push messages to slack and Android- IOS (FCM). Check `push.js`
 
 
 
