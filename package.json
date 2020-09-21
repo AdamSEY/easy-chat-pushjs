@@ -36,7 +36,7 @@
     "type": "git",
     "url": "git+https://github.com/AdamSEY/easy-chat-pushjs.git"
   },
-  "keywords": [],
+  "keywords": ["websocket", "notifications", "redis" , "ping","socketio", "slack", "fcm" ,"fcm-notifications" , "push-notifications" , "android" , "ios" , "javascript", "nodejs"],
   "bugs": {
     "url": "https://github.com/AdamSEY/easy-chat-pushjs/issues"
   },
