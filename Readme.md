@@ -67,6 +67,24 @@ If you want to wait to get a response of the functions run the following
     })
     
 
+
+### Run WebSocket Server:
+
+Make sure redis is up and running, in terminal type: `redis-server`
+create your `server.js` file (see examples websocket.js)
+create your jwt RS256 key pairs and set the path in the options object. 
+
+**Create RS256 key pairs on Unix-like OS**
+    
+    ssh-keygen -t rsa -b 4096 -m PEM -f jwtRS256.key
+    openssl rsa -in jwtRS256.key -pubout -outform PEM -out jwtRS256.key.pub
+
+Run your `server.js` by calling `forever server.js`
+
+**You may need to install forever (npm i forever -g)**
+
+optionally you can enable FCM and Slack API if you're planning to use them.
+
 ### More Examples
 
 Take a look on the examples' directory, you'll find there:
@@ -76,32 +94,9 @@ Take a look on the examples' directory, you'll find there:
 
 
 
-### Run WebSocket Server:
-
-Make sure redis is up and running, in terminal type: `redis-server`
-create your `server.js` file (see examples websocket.js)
-create your jwt RS256 key pairs and set the path in the options object.
-
-Run your `server.js` by calling `forever server.js`
-
-**You may need to install forever (npm i forever -g)**
-
-optionally you can enable FCM and Slack API if you're planning to use them.
-
 ### Notes
 - Redis used to store when the last time we received a "ping" from the client, if we don't receive a ping every 15 seconds we will disconnect the client.
 - production https://blog.jayway.com/2015/04/13/600k-concurrent-websocket-connections-on-aws-using-node-js/
 - We used this tutorial to get an idea how to allow only one concurrent connection using same userId, https://hackernoon.com/enforcing-a-single-web-socket-connection-per-user-with-node-js-socket-io-and-redis-65f9eb57f66a
 
 
-
-
-
-
-----
-
-Next:
-Make sure everything is working
-learn imports / exports
-use babel in defualt with nodejs and learn how does it work
-server class exporting isn't working.
