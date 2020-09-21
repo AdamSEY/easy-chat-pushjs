@@ -1,6 +1,6 @@
 {
   "name": "easy-chat-pushjs",
-  "version": "1.2.7",
+  "version": "1.2.8",
   "description": "Push Notifications using websocket, support android, IOS and browser background notifications (FCM) and Slack notifications.",
   "main": "lib/index.js",
   "author": "",
@@ -36,7 +36,21 @@
     "type": "git",
     "url": "git+https://github.com/AdamSEY/easy-chat-pushjs.git"
   },
-  "keywords": ["websocket", "notifications", "redis" , "ping","socketio", "slack", "fcm" ,"fcm-notifications" , "push-notifications" , "android" , "ios" , "javascript", "nodejs"],
+  "keywords": [
+    "websocket",
+    "notifications",
+    "redis",
+    "ping",
+    "socketio",
+    "slack",
+    "fcm",
+    "fcm-notifications",
+    "push-notifications",
+    "android",
+    "ios",
+    "javascript",
+    "nodejs"
+  ],
   "bugs": {
     "url": "https://github.com/AdamSEY/easy-chat-pushjs/issues"
   },
