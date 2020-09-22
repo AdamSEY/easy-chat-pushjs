@@ -1,6 +1,6 @@
 import {IncomingMessage} from "http";
 
-export default class Slack {
+export class Slack {
     static async sendSlackMessage(slackUrl: string, markdownMessage: string) {
         const url = require('url');
         const link = url.parse(slackUrl);

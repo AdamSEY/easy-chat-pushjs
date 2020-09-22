@@ -8,7 +8,7 @@ const p2p = require('socket.io-p2p-server').Server;
 import Firebase from './Firebase';
 import SocketError from "./SocketError";
 import {UserObj} from "./UserObj";
-const Slack = require('./Slack');
+const {Slack} = require('./Slack');
 const fs = require('fs');
 
 
@@ -141,7 +141,7 @@ export class Server {
 
         const sock = zmq.socket('pull');
         sock.bindSync(this.options.zmqServerAddress);
-        console.log('Producer bound to port 3500');
+        console.log('ZMQ listening to ', this.options.zmqServerAddress);
         sock.on('message', (msg : string) => {
             /*
                   msg: Object

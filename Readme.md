@@ -12,8 +12,8 @@ it's not supposed be available for public, so some parts might be unclear.
 
 ### Server Installation
 
-Install redis [required for onlyOneConnection feature]
-Install ZMQ [required to push notifications to the websocket server]
+- Install redis [required for onlyOneConnection feature] [learn more](https://www.digitalocean.com/community/tutorials/how-to-install-and-secure-redis-on-ubuntu-18-04)       
+- Install ZMQ [required to push notifications to the websocket server] [learn more](https://zeromq.org/download/)
 
 ### Features
 
