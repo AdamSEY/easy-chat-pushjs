@@ -4,11 +4,10 @@ const bluebird = require('bluebird');
 bluebird.promisifyAll(redis);
 const zmq = require('zeromq');
 const server = require('http').createServer();
-const p2p = require('socket.io-p2p-server').Server;
+//const p2p = require('socket.io-p2p-server').Server;
 import Firebase from './Firebase';
 import SocketError from "./SocketError";
 import {UserObj} from "./UserObj";
-const {Slack} = require('./Slack');
 const fs = require('fs');
 
 
@@ -20,7 +19,6 @@ interface optionsObj {
     jwtPublicKey: Buffer;
     version?: number;
     onlyOneConnection?: boolean;
-    slackURL?: null | string;
     pingTimeout?: number;
     pingInterval?: number;
     wsPort?: number;
@@ -168,11 +166,6 @@ export class Server {
                     serverMessage.data,
                 );
                 console.log('fcm message queued');
-            }
-            // sending slack message
-            if (this.options.slackURL && serverMessage.hasOwnProperty('slackMessage')) {
-                Slack.sendSlackMessage(this.options.slackURL, serverMessage.slackMessage);
-                console.log('slack message queued');
             }
             console.log({ ZMQ: 'zmq message received', serverMessage });
         });

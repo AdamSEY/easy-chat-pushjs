@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const zmq = require('zeromq');
 const uuid = require('uuid');
 const fs = require('fs');
+const {Slack} = require('./Slack');
 import {UserObj} from "./UserObj";
 
 
@@ -11,6 +12,7 @@ interface clientOptionsObj {
     version?: number;
     jwtExpireSeconds?: number;
     zmqClientAddress?: string;
+    slackURL?: string;
 }
 
 export class User {
@@ -96,7 +98,7 @@ export class User {
             try {
                 const sock = zmq.socket('push');
                 sock.connect(this.options.zmqClientAddress);
-                sock.setsockopt('linger', 0);
+                sock.setsockopt('linger', 10000);
                 sock.send(
                     JSON.stringify({
                         fcmTokens,
@@ -115,19 +117,10 @@ export class User {
     }
     async pushSlackMessage(markdownMessage: string) {
         // @markdownMessage: message string, could be markdown.
-
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
             try {
-                const sock = zmq.socket('push');
-                sock.connect(this.options.zmqClientAddress);
-                sock.setsockopt('linger', 0);
-                sock.send(
-                    JSON.stringify({
-                        slackMessage: markdownMessage,
-                    }),
-                );
-                sock.close();
-                return resolve('Slack Message Queued');
+                const res = await Slack.sendSlackMessage(this.options.slackURL, markdownMessage);
+                return resolve(res);
             } catch (e) {
                 return reject(e);
             }

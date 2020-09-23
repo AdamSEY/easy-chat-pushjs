@@ -3,7 +3,8 @@ const path = require('path');
 
 const user = new User({
     version: 1.0,
-    jwtPrivateKey: path.dirname(__dirname) + '/private.key'
+    jwtPrivateKey: path.dirname(__dirname) + '/private.key',
+    slackURL: "https://hooks.slack.com/EXAMPLE/...",
 });
 
 const token = user.createUserToken(['gender', 'male'] , null, 'dasfasdasd2342', {username: 'admin'});
