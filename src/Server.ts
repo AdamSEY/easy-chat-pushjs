@@ -143,6 +143,39 @@ export class Server {
         socket.bindSync(this.options.zmqServerAddress);
         console.log('ZMQ listening to ', this.options.zmqServerAddress);
 
+        socket.on('message', (msg : string) => {
+            /*
+                  msg: Object
+                  roomName: string
+                  userId: string or false
+                  fcmTokens: array or false
+                  data: serverMessage object
+                   */
+            const serverMessage = JSON.parse(msg);
+            if (serverMessage.userId !== null) {
+                io.to('userRoom:' + serverMessage.userId).emit('push', serverMessage.data);
+            } else {
+                io.to(serverMessage.roomName).emit('push', serverMessage.data); // sending notification to a specific room
+            }
+
+            // sending fcm notification
+            if (fcm && serverMessage.hasOwnProperty('fcmTokens')) {
+                const d = fcm.sendMessage(
+                    serverMessage.fcmTokens,
+                    serverMessage.title,
+                    serverMessage.body,
+                    serverMessage.imageUrl,
+                    serverMessage.data,
+                );
+                console.log('fcm message queued');
+            }
+            // sending slack message
+            if (this.options.slackURL && serverMessage.hasOwnProperty('slackMessage')) {
+                Slack.sendSlackMessage(this.options.slackURL, serverMessage.slackMessage);
+                console.log('slack message queued');
+            }
+            console.log({ ZMQ: 'zmq message received', serverMessage });
+        });
 
         //Server.flushAll(); // required in case our nodejs crashed so we remove all the keys so our users can set pinned message. //disbaled since we're no longer using a pinned message.
 
