@@ -151,7 +151,7 @@ export class Server {
                   data: serverMessage object
                    */
             const serverMessage = JSON.parse(msg);
-            if (serverMessage.userId !== false) {
+            if (serverMessage.userId !== null) {
                 io.to('userRoom:' + serverMessage.userId).emit('push', serverMessage.data);
             } else {
                 io.to(serverMessage.roomName).emit('push', serverMessage.data); // sending notification to a specific room
@@ -189,8 +189,8 @@ export class Server {
 
         io.on('connection', async (socket : any) => {
             socket.on('disconnect', () => {
-                console.log('OnDisconnect: getting total users and connected users');
-                this.disconnect(socket, io);
+                // console.log('OnDisconnect: getting total users and connected users');
+               // this.disconnect(socket, io);
             });
 
             const userInfo = await this.connection(socket); // when user connect we authenticate them and returns
