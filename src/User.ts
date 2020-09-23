@@ -72,7 +72,6 @@ export class User {
             try {
                 const sock = zmq.socket('push');
                 sock.connect(this.options.zmqClientAddress);
-                sock.setsockopt('linger', 0);
                 sock.send(
                     JSON.stringify({
                         roomName,
@@ -80,6 +79,7 @@ export class User {
                         data: data,
                     }),
                 );
+                sock.setsockopt('linger', 10000);
                 sock.close();
                 return resolve('Message Queued');
             } catch (e) {
