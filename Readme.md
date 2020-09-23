@@ -1,9 +1,8 @@
 # This package is still under development and made for paidtabs.com & ziggs.io
 it's not supposed be available for public, so some parts might be unclear.
 
-## Your PR's are really apprecaited
+## Your PR's are really appreciated
 
-**Sorry for the bad English, messy README file and all the mistakes. 29 hours no sleep**
 
 ### npm Installation
 
@@ -18,23 +17,24 @@ it's not supposed be available for public, so some parts might be unclear.
 ### Features
 
 
-- Serverless authenaction, JWT
+- Serverless authentication, JWT
 - Push a message to slack channel
 - The ability to disable multiple connections [ see uniqueToken -> createUserToken Function ]
-- User can publish to speific room only.
+- User can publish to specific room only.
 - Subscribe to multiple rooms e.g. gender,male rooms in case you want to send a message to just the male rather than all genders.
 - android, browser and IOS notifications directly from your app based on firebase cloud messaging. 
-- Works remotely i.e you can have the websocket on a seperate server and use it from any other nodejs app. *zmq should listen to 0.0.0.0 instead of 127.0.0.1*
+- Works remotely i.e you can have the websocket on a separate server and use it from any other nodejs app. *zmq should listen to 0.0.0.0 instead of 127.0.0.1*
 
 ### Push notifications example
 
 
-    const User = require('easy-chat-pushjs').User;
+    const {User} = require('easy-chat-pushjs');
     const path = require('path');
 
     const user = new User({
         version: 1.0, // used to invalidate the old tokens (must match the server version)
-        jwtPrivateKey: path.dirname(__dirname) + '/private.key' // absoulte path to the "jwt private key", used to encrypt the token.
+        jwtPrivateKey: path.dirname(__dirname) + '/private.key', // absoulte path to the "jwt private key", used to encrypt the token.
+        slackURL: "https://hooks.slack.com/services/EXAMPLE/....",
     });
 
 create token, client/ frontend gonna use this to connect to the websocket.
@@ -47,7 +47,7 @@ send a message to everyone in the room 'gender' (this message will be delivered 
     const publish = user.pushNotification('gender', {test: true} , null);
     
     
-send a message to a speicifc user based on token's userId.
+send a message to a specific user based on token's userId.
 
     const publish2 = user.pushNotification(null, {test: true} , 'dasfasdasd2342');
     
@@ -56,7 +56,7 @@ push a browser / android / ios notification based on user token. take a look on 
 
     const firebase = user.pushFirebaseNotifications(['FCM_TOKEN'], 'test', 'You have received a new request' );
     
-push slack notification, you need a webhook url to be set while configureing the server, for more information [click here](https://api.slack.com/messaging/webhooks)
+push slack notification, you need a webhook url to be set while configuring the server, for more information [click here](https://api.slack.com/messaging/webhooks)
 
     const slack = user.pushSlackMessage('You have received a new request');
 
