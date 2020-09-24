@@ -85,6 +85,36 @@ Run your `server.js` by calling `forever server.js`
 
 optionally you can enable FCM and Slack API if you're planning to use them.
 
+### Nginx Setup Proxy
+
+    map $http_upgrade $connection_upgrade {
+        default upgrade;
+        '' close;
+    }
+    upstream socketio {
+        server 127.0.0.1:5511;
+    }
+    
+    Server{
+    
+      location ^~ /websocket/ {
+           
+            proxy_pass http://socketio;
+            proxy_set_header Host $http_host;
+            proxy_redirect off;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection "upgrade";
+            proxy_read_timeout 86400;
+            
+            // if over loadbalancer or cloudflare 
+            
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+      }
+      
+    }  
+
 ### More Examples
 
 Take a look on the examples' directory, you'll find there:

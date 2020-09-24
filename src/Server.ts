@@ -99,23 +99,23 @@ export class Server {
 
         if (userInfo === false) {
             console.log('authentication error');
-            return next(new Error('authentication error'));
+            return next(new Error(JSON.stringify({error: "authentication failed", code: 1})));
         }
         if (userInfo.version !== this.options.version) {
             console.log('Client - Server versions mismatch');
-            return next(new Error('Client - Server versions mismatch'));
+            return next(new Error(JSON.stringify({error: "authentication failed - Version Mismatch", code: 3})));
         }
         if (this.options.onlyOneConnection) {
             console.log('OnlyOneConnection mode is enabled');
             const canConnect = await this.redisClient.setAsync(userInfo.uniqueToken, true, 'NX', 'EX', 15);
             // Expire is important because if we couldn't remove the token the user won't be able to connect anymore
-            // we will renew that time using socketIO pings, in case server shut down and we didn't receive onDisconnet event
+            // we will renew that time using socketIO pings, in case server shut down and we didn't receive onDisconnect event
             // update: maybe not required since we're flushing all the keys in case our app crashed.
             console.log('canConnect', Boolean(canConnect));
 
             if (!canConnect) {
                 console.log('Already Connected');
-                return next(new Error('Already Connected'));
+                return next(new Error(JSON.stringify({error: "authentication failed - already Connected", code: 2})));
             } // already connected
         }
         socket.auth = true;
@@ -183,15 +183,16 @@ export class Server {
 
         io.on('connection', async (socket : any) => {
             socket.on('disconnect', () => {
-                // console.log('OnDisconnect: getting total users and connected users');
+                 console.log('User Disconnect');
                // this.disconnect(socket, io);
             });
+     //      socket.disconnect();
 
             const userInfo = await this.connection(socket); // when user connect we authenticate them and returns
 
             //  p2p(socket, null, userInfo.chatRoomName, 'webrtc'); // init p2p connection. // enable for p2p i.e webRTC
 
-            // disbaled, I think those should be implmented on frontend. they're working anyway, nothing incomplete.
+            // disabled, I think those should be implemented on frontend. they're working anyway, nothing incomplete.
             // await Server.usersInfo(io, userInfo); // send users info
             // await Server.setPinnedMessage(userInfo.chatRoomName,socket.id, userInfo.pinned);
             // await Server.getPinnedMessage(io,userInfo.chatRoomName);
