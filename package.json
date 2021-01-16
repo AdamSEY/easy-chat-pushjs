@@ -1,6 +1,6 @@
 {
   "name": "easy-chat-pushjs",
-  "version": "1.2.15",
+  "version": "1.3.0",
   "description": "Push Notifications using websocket, support android, IOS and browser background notifications (FCM) and Slack notifications.",
   "main": "lib/index.js",
   "author": "",
