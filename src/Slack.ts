@@ -9,7 +9,7 @@ export class Slack {
 
         const data = JSON.stringify({ text: markdownMessage });
 
-        console.log(link);
+        // console.log(link);
         const options = {
             hostname: link.hostname,
             port: 443,
@@ -22,7 +22,7 @@ export class Slack {
         };
 
         const req = https.request(options, (res: IncomingMessage) => {
-            console.log(`statusCode: ${res.statusCode}`);
+            // console.log(`statusCode: ${res.statusCode}`);
 
             res.on('data', (d: any) => {
                 process.stdout.write(d);

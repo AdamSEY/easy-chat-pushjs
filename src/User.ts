@@ -38,13 +38,14 @@ export class User {
 
     }
 
-    createUserToken(rooms: object, chatRoomName: null|string, userId: string, uniqueToken : null | string = null, extras: object = {}) {
+    createUserToken(rooms: Array<string>, chatRoomName: null|string, userId: string, uniqueToken : null | string = null, extras: object = {}) {
         // @ts-ignore
         const jwtToken: UserObj = {};
 
         jwtToken.userId = userId;
         jwtToken.chatRoomName = chatRoomName; // this room user can publish messages by emitting "chat" event, anyone in the same room will receive this message.
         jwtToken.rooms = rooms; // array of rooms
+
         // jwtToken.pinnedMessage = pinnedMessage;
         jwtToken.joinTime = new Date().getTime();
         if (this.options.version != null) {

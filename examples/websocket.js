@@ -6,7 +6,7 @@ const firebaseAdminSdkPath = path.dirname(__dirname) + '/firebase_admin_sdk.json
 const databaseUrl = 'https://EXAMPLE.firebaseio.com' // get the file from firebase -> settings -> Service Account -> Firebase admin sdk.
 
 const websocket = new Server({
-    version: 1.0,
+    version: 1.0, // must match client's version, otherwise authentication will fail
     firebaseAdminSdkPath: firebaseAdminSdkPath,// activating firebase notifications.
     firebaseDatabaseURL: databaseUrl, // // activating firebase notifications.
     jwtPublicKey: path.dirname(__dirname) + './public.pem',

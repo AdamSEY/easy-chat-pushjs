@@ -2,7 +2,7 @@ const {User} = require('easy-chat-pushjs');
 const path = require('path');
 
 const user = new User({
-    version: 1.0,
+    version: 1.0, // must match server's version, otherwise authentication will fail
     jwtPrivateKey: path.dirname(__dirname) + '/private.key',
     slackURL: "https://hooks.slack.com/EXAMPLE/...",
 });

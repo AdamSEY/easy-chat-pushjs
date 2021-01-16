@@ -1,7 +1,7 @@
 # This package is still under development and made for paidtabs.com & ziggs.io
 it's not supposed be available for public, so some parts might be unclear.
 
-## Your PR's are really appreciated
+## Your PRs are really appreciated
 
 
 ### npm Installation

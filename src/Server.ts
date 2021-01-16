@@ -39,8 +39,8 @@ export class Server {
         this.options.wsPort = 3000;
         this.options.pingInterval = 10000;
         this.options.pingTimeout = 5000;
-        this.options.onlyOneConnection = false; // weither you want to allow users to connect multiple times using the same token.
-        this.options.version = 1.0; // used to invalidate old tokens when you want. if client version different than this. authenacation will fail.
+        this.options.onlyOneConnection = false; // either you want to allow users to connect multiple times using the same token.
+        this.options.version = 1.0; // used to invalidate old tokens when you want. if client version different than this. authentication will fail.
         // override options
         if (options && typeof options === 'object') {
             for (const option in options) {
@@ -137,6 +137,7 @@ export class Server {
             fcm = new Firebase(this.options.firebaseAdminSdkPath, this.options.firebaseDatabaseURL);
         }
 
+        // receiving events from ZMQ
         const socket = zmq.socket('pull');
         socket.bindSync(this.options.zmqServerAddress);
         console.log('ZMQ listening to ', this.options.zmqServerAddress);
@@ -150,6 +151,7 @@ export class Server {
                   data: serverMessage object
                    */
             const serverMessage = JSON.parse(msg);
+            // we're sure that the message is json since it's coming only through our ZMQ server
             if (serverMessage.userId !== null) {
                 io.to('userRoom:' + serverMessage.userId).emit('push', serverMessage.data);
             } else {
@@ -179,7 +181,11 @@ export class Server {
         // });
 
         // or this way
+        // Users authentication
         io.use(this.authMiddleware.bind(this));
+
+        // ================================== direct connection from JS ==================================//
+
 
         io.on('connection', async (socket : any) => {
             socket.on('disconnect', () => {
@@ -203,7 +209,9 @@ export class Server {
                 // user can join multiple rooms. for example: user can join a room called "Gender" as well as "male", you can push notification to both genders or just males.
                 socket.join(room); // used to send a message a everyone in a specific room
             }
-
+            if (userInfo.chatRoomName != null){
+                socket.join('chatRoom:' + userInfo.chatRoomName);
+            }
             socket.on('chat', (messageObj: any) => {
                 // chat message received
                 console.log('chat message received');
@@ -215,11 +223,10 @@ export class Server {
                     })();
                 }
 
+                // sending to users in this room 'userInfo.chatRoomName' by emitting chat event.
                 if (userInfo.chatRoomName) {
-                    console.log('Publish to room members: ' + userInfo.chatRoomName + ' succeed');
-                    io.to(userInfo.chatRoomName).emit('chat', messageObj);
-                } else {
-                    console.log('Publish to room members: ' + userInfo.chatRoomName + ' failed');
+                    console.log('Publish to room members: ' + 'chatRoom:' + userInfo.chatRoomName + ' succeed');
+                    io.to('chatRoom:' + userInfo.chatRoomName).emit('chat', messageObj);
                 }
             });
 
