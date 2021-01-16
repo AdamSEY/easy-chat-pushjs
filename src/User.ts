@@ -24,7 +24,7 @@ export class User {
         this.options.zmqClientAddress = 'tcp://127.0.0.1:3500';
         this.options.jwtExpireSeconds = 365 * 24 * 60 * 60;
         this.options.version = 1.0; // used to invalidate old tokens when you want. if client version different than this. authenacation will fail.
-
+        //
         // override options
         if (options && typeof options === 'object') {
             for (const option in options) {
