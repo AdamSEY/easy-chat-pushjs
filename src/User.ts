@@ -32,7 +32,7 @@ export class User {
                 this.options[option] = options[option];
             }
         }
-
+        //
         if (this.options.jwtPrivateKey === null)
             throw new SocketError('jwtPrivateKey should be Buffer, make sure to create JWT RS256 key pair and set the path.');
 
