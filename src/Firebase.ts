@@ -1,7 +1,5 @@
-import { admin } from 'firebase-admin/lib/messaging';
+import * as admin from "firebase-admin";
 import BatchResponse = admin.messaging.BatchResponse;
-
-const admin = require('firebase-admin');
 
 export default class {
   private readonly firebaseAdminSdkPath: string;
@@ -19,7 +17,13 @@ export default class {
       databaseURL: this.databaseURL,
     });
   }
-  sendMessage(tokens: object, title: string, body: string, imageUrl: string | null = null, extras: object | null = {}) {
+  sendMessage(
+      tokens: Array<string>,
+              title: string,
+              body: string,
+              imageUrl: string | undefined = undefined,
+              extras?: { [key: string]: string; }
+    ) {
     const message = {
       data: extras,
       notification: {
@@ -38,6 +42,7 @@ export default class {
       },
       tokens: tokens,
     };
+
     console.log(message.notification);
     return new Promise((resolve, reject) => {
       admin
