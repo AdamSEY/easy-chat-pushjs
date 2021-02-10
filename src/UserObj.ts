@@ -5,4 +5,5 @@ export interface UserObj{
     joinTime : number;
     version : number;
     uniqueToken : string;
+    webRtcRoom: string | null
 }

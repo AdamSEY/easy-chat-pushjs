@@ -1,3 +1,4 @@
+//Starting the websocket server
 const {Server} = require('easy-chat-pushjs');
 const path = require('path');
 

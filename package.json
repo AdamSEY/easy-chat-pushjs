@@ -9,11 +9,14 @@
     "bluebird": "^3.7.2",
     "debug": "^4.3.1",
     "firebase-admin": "^9.4.2",
+    "has-binary": "^0.1.7",
     "jsonwebtoken": "^8.5.1",
     "nodemon": "^2.0.7",
     "redis": "^3.0.2",
+    "simple-peer": "^9.9.3",
     "socket.io": "^3.1.0",
     "socket.io-p2p-server": "^1.2.0",
+    "to-array": "^0.1.4",
     "uuid": "^8.3.2",
     "zeromq": "^5.2.0"
   },
@@ -49,7 +52,9 @@
     "android",
     "ios",
     "javascript",
-    "nodejs"
+    "nodejs",
+    "webrtc",
+    "p2p"
   ],
   "bugs": {
     "url": "https://github.com/AdamSEY/easy-chat-pushjs/issues"

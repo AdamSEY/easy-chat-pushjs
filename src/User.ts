@@ -38,13 +38,14 @@ export class User {
 
     }
 
-    createUserToken(rooms: Array<string>, chatRoomName: null|string, userId: string, uniqueToken : null | string = null, extras: object = {}) {
+    createUserToken(rooms: Array<string>, chatRoomName: null|string, userId: string, uniqueToken : null | string = null,webRtcRoom: null|string = null ,extras: object = {}) {
         // @ts-ignore
         const jwtToken: UserObj = {};
 
         jwtToken.userId = userId;
         jwtToken.chatRoomName = chatRoomName; // this room user can publish messages by emitting "chat" event, anyone in the same room will receive this message.
         jwtToken.rooms = rooms; // array of rooms
+        jwtToken.webRtcRoom = webRtcRoom; // the room where all the signaling will happen. if null it's disabled.
 
         // jwtToken.pinnedMessage = pinnedMessage;
         jwtToken.joinTime = new Date().getTime();
@@ -52,7 +53,7 @@ export class User {
             jwtToken.version = this.options.version;
         } // change this to invalidate all previous tokens.
         jwtToken.uniqueToken = uniqueToken ? uniqueToken : uuid.v4(); // in case onlyOneConnection is enabled. if a user has the same token we don't allow them to join.
-        // use example: if you want e.g. to disallow a user with same userId/ip to connect twice, unqiue token could be an IP address or userId.
+        // use case: if you want e.g. to disallow a user with same userId/ip to connect twice, unqiue token could be an IP address or userId.
 
         const issuedAt = parseInt((new Date().getTime() / 1000).toString());
         // @ts-ignore
@@ -70,6 +71,7 @@ export class User {
         // @fcmTokens: array of user fcm tokens.
         // @userId: if false, public will happen to everyone in a room
         // Note: roomName can be null if userId is not false.
+        if (!roomName && !userId) throw new Error('Please specify where you would like to publish your message, choose a userID or a room name');
 
         return new Promise((resolve, reject) => {
             try {

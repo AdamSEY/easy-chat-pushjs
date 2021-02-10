@@ -20,20 +20,27 @@ export class Slack {
                 'Content-Length': data.length,
             },
         };
+        return new Promise((resolve, reject) => {
+            const req = https.request(options, (res:IncomingMessage) => {
+                res.setEncoding('utf8');
+                let responseBody = '';
 
-        const req = https.request(options, (res: IncomingMessage) => {
-            // console.log(`statusCode: ${res.statusCode}`);
+                res.on('data', (chunk:any) => {
+                    responseBody += chunk;
+                });
 
-            res.on('data', (d: any) => {
-                process.stdout.write(d);
+                res.on('end', () => {
+                    resolve(responseBody);
+                });
             });
+
+            req.on('error', (err: any) => {
+                reject(err);
+            });
+
+            req.write(data)
+            req.end();
         });
 
-        req.on('error', (error: Error) => {
-            console.error(error);
-        });
-
-        req.write(data);
-        req.end();
     }
 }

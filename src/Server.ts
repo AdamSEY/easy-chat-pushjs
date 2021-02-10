@@ -4,7 +4,7 @@ const bluebird = require('bluebird');
 bluebird.promisifyAll(redis);
 const zmq = require('zeromq');
 const server = require('http').createServer();
-//const p2p = require('socket.io-p2p-server').Server;
+const p2p = require('../src/simplePeer').Server;
 import Firebase from './Firebase';
 import SocketError from "./SocketError";
 import {UserObj} from "./UserObj";
@@ -142,40 +142,6 @@ export class Server {
         socket.bindSync(this.options.zmqServerAddress);
         console.log('ZMQ listening to ', this.options.zmqServerAddress);
 
-        socket.on('message', (msg : string) => {
-            /*
-                  msg: Object
-                  roomName: string
-                  userId: string or false
-                  fcmTokens: array or false
-                  data: serverMessage object
-                   */
-            const serverMessage = JSON.parse(msg);
-            // we're sure that the message is json since it's coming only through our ZMQ server
-            if (serverMessage.userId !== null) {
-                io.to('userRoom:' + serverMessage.userId).emit('push', serverMessage.data);
-            } else {
-                io.to(serverMessage.roomName).emit('push', serverMessage.data); // sending notification to a specific room
-            }
-
-            // sending fcm notification
-            if (fcm && serverMessage.hasOwnProperty('fcmTokens')) {
-                const d = fcm.sendMessage(
-                    serverMessage.fcmTokens,
-                    serverMessage.title,
-                    serverMessage.body,
-                    serverMessage.imageUrl,
-                    serverMessage.data,
-                );
-                console.log('fcm message queued');
-            }
-            console.log({ ZMQ: 'zmq message received', serverMessage });
-        });
-
-        //Server.flushAll(); // required in case our nodejs crashed so we remove all the keys so our users can set pinned message. //disbaled since we're no longer using a pinned message.
-
-        // this way
-
         // io.use((socket, next) => {
         //     return this.authMiddleware(socket, next);
         // });
@@ -184,19 +150,22 @@ export class Server {
         // Users authentication
         io.use(this.authMiddleware.bind(this));
 
-        // ================================== direct connection from JS ==================================//
-
-
         io.on('connection', async (socket : any) => {
             socket.on('disconnect', () => {
-                 console.log('User Disconnect');
-               // this.disconnect(socket, io);
+                console.log('User Disconnect');
+                // this.disconnect(socket, io);
             });
-     //      socket.disconnect();
+            //      socket.disconnect();
 
             const userInfo = await this.connection(socket); // when user connect we authenticate them and returns
 
-            //  p2p(socket, null, userInfo.chatRoomName, 'webrtc'); // init p2p connection. // enable for p2p i.e webRTC
+            if (userInfo.chatRoomName != null){
+                socket.join('chatRoom:' + userInfo.chatRoomName);
+            }
+
+            if (userInfo.webRtcRoom) {
+                p2p(socket, `webRTC:${userInfo.webRtcRoom}`, io);
+            } // init p2p connection. // enable for p2p i.e webRTC
 
             // disabled, I think those should be implemented on frontend. they're working anyway, nothing incomplete.
             // await Server.usersInfo(io, userInfo); // send users info
@@ -207,11 +176,9 @@ export class Server {
             socket.join('userRoom:' + userInfo.userId); // used to send a message to a specific user
             for (const room of userInfo.rooms) {
                 // user can join multiple rooms. for example: user can join a room called "Gender" as well as "male", you can push notification to both genders or just males.
-                socket.join(room); // used to send a message a everyone in a specific room
+                socket.join("room:" + room); // used to send a message a everyone in a specific room
             }
-            if (userInfo.chatRoomName != null){
-                socket.join('chatRoom:' + userInfo.chatRoomName);
-            }
+
             socket.on('chat', (messageObj: any) => {
                 // chat message received
                 console.log('chat message received');
@@ -233,6 +200,45 @@ export class Server {
             //   Server.disconnectUser(socket, io, 'too many users' , "userRoom:" + userInfo.userId);
             console.log('new connection');
         });
+        // ================================== direct connection from JS ==================================//
+        socket.on('message', (msg : string) => {
+            /*
+                  msg: Object
+                  roomName: string
+                  userId: string or false
+                  fcmTokens: array or false
+                  data: serverMessage object
+                   */
+            const serverMessage = JSON.parse(msg);
+            // we're sure that the message is json since it's coming only through our ZMQ server
+            if (serverMessage.userId !== null) { // direct message
+                io.to('userRoom:' + serverMessage.userId).emit('push', serverMessage.data);
+            } else {
+                io.to("room:"+serverMessage.roomName).emit('push', serverMessage.data); // sending notification to a specific room
+            }
+
+            // sending fcm notification
+            if (fcm && serverMessage.hasOwnProperty('fcmTokens')) {
+                const d = fcm.sendMessage(
+                    serverMessage.fcmTokens,
+                    serverMessage.title,
+                    serverMessage.body,
+                    serverMessage.imageUrl,
+                    serverMessage.data,
+                );
+                console.log('fcm message queued');
+            }
+            console.log({ ZMQ: 'zmq message received', serverMessage });
+        });
+
+        //Server.flushAll(); // required in case our nodejs crashed so we remove all the keys so our users can set pinned message. //disbaled since we're no longer using a pinned message.
+
+
+
+
+
+
+
 
         server.listen(this.options.wsPort);
         console.log('Websocket listening to', this.options.wsPort);
