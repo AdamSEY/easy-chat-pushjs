@@ -23,6 +23,8 @@ interface optionsObj {
     pingInterval?: number;
     wsPort?: number;
     zmqServerAddress?: string;
+    onUserDisconnects?: Function
+    onUserConnects?: Function
 }
 
 
@@ -71,10 +73,14 @@ export class Server {
 
     async disconnect(socket: any, io: any) {
         //  Server.usersInfo(io,socket.userInfo);
-        console.log('user disconnected');
+       console.log('user disconnected' , socket.userInfo);
         if (this.options.onlyOneConnection && socket.userInfo) {
-            await this.redisClient.delAsync(socket.userInfo.uniqueToken);
+             this.redisClient.delAsync(socket.userInfo.uniqueToken);
         }
+        if (typeof this.options.onUserDisconnects === 'function') {
+            this.options.onUserDisconnects(socket.userInfo);
+        }
+
         //  await Server.delPinnedMessage(socket.id,socket.userInfo.chatRoomName,io);
     }
     async connection(socket: any){
@@ -88,6 +94,9 @@ export class Server {
                     await this.redisClient.setAsync(userInfo.uniqueToken, true, 'XX', 'EX', 15);
                 }
             });
+        }
+        if (typeof this.options.onUserConnects === 'function') {
+            this.options.onUserConnects(socket.userInfo);
         }
 
         return userInfo;
@@ -153,7 +162,7 @@ export class Server {
         io.on('connection', async (socket : any) => {
             socket.on('disconnect', () => {
                 console.log('User Disconnect');
-                // this.disconnect(socket, io);
+                this.disconnect(socket, io);
             });
             //      socket.disconnect();
 
@@ -183,11 +192,7 @@ export class Server {
                 // chat message received
                 console.log('chat message received');
                 if (typeof this.options.onMessageReceived === 'function') {
-                    (async () => {
-                        if (typeof this.options.onMessageReceived !== "undefined"){
-                            this.options.onMessageReceived(userInfo, messageObj);
-                        }
-                    })();
+                    this.options.onMessageReceived(userInfo, messageObj);
                 }
 
                 // sending to users in this room 'userInfo.chatRoomName' by emitting chat event.

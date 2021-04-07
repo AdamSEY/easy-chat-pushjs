@@ -11,9 +11,11 @@ const websocket = new Server({
     firebaseAdminSdkPath: firebaseAdminSdkPath,// activating firebase notifications.
     firebaseDatabaseURL: databaseUrl, // // activating firebase notifications.
     jwtPublicKey: path.dirname(__dirname) + './public.pem',
-    onMessageReceived: (decodedUserToken, websocketMessage)=>{
+    onMessageReceived: (decodedUserToken, websocketMessage)=>{ // onChatMessage received
         console.log({decodedUserToken, websocketMessage});
-    }
+    },
+    onUserDisconnects: (userInfo)=>{ console.log('User disconnected',{userInfo})}, // whenever a user disconnects. user is offline
+    onUserConnects: (userInfo)=>{ console.log('User connected',{userInfo})} // // whenever a user connects. User is online
 });
 
 websocket.startServer();

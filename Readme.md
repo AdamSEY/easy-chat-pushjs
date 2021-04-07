@@ -27,7 +27,7 @@ it's not supposed to be available for public, so some segments might be ambiguou
 - Install ZMQ [required to push notifications to the websocket server] [learn more](https://zeromq.org/download/)
 
 
-### How to create authentication token?
+### How to create the authentication token to connect to the websocket server? 
 
     const {User} = require('easy-chat-pushjs');
     const path = require('path');
@@ -38,12 +38,14 @@ it's not supposed to be available for public, so some segments might be ambiguou
         slackURL: "https://hooks.slack.com/services/EXAMPLE/....",
     });
 
-    const token = user.createUserToken(['gender', 'male'] , "CHAT_ROOM_NAME", 'USER_ID', "188.22.34.33",'signalling_room');
+    const token = user.createUserToken(['gender', 'male'] , "CHAT_ROOM_NAME", '<USER_ID>', "188.22.34.33",'signalling_room');
     
-Now, you send this token to your browser, and you're good to go!
+Now, you have to send this token to your user, see examples/client -> token: this token
+Once your clients connected to your websocket server, you're good to start pushing notifications
 
 ### Push notifications example
 
+Now if you'd like to push a message to all the clients who are connected to 'gender' you do the following
 
     const {User} = require('easy-chat-pushjs');
     const path = require('path');
@@ -53,44 +55,27 @@ Now, you send this token to your browser, and you're good to go!
         jwtPrivateKey: path.dirname(__dirname) + '/private.key', // absoulte path to the "jwt private key", used to encrypt the token.
         slackURL: "https://hooks.slack.com/services/EXAMPLE/....",
     });
-
-create token, client/ frontend gonna use this to connect to the websocket.
-
-    
-    const token = user.createUserToken(['gender', 'male'] , "CHAT_ROOM_NAME", 'USER_ID', "188.22.34.33",'signalling_room');
-    // parameters
-    createUserToken(rooms: Array<string>, chatRoomName: null|string, userId: string, uniqueToken : null | string = null,webRtcRoom: null|string = null ,extras: object = {})
-    
-Push a notification to anyone in 'gender', example
-
-    const publish = user.pushNotification('gender', {message: 'hello there'});
+    user.pushNotification('gender', {message: 'hello there'}).then(() => {console.log("Message Pushed")});
     
     
-send a message to a specific user based on token's userId.
+Send a message to a specific user based on token's userId.
 
-    const publish2 = user.pushNotification(null, {message: hello} , 'userid_dasdad');
+    user.pushNotification(null, {message: hello} , '<USER_ID>').then(() => {console.log("Message Pushed")});;
     
     
 push a firebase notification, take a look at the following [link](https://developers.google.com/web/ilt/pwa/introduction-to-push-notifications) if you want to know how to get a browser token.
 
-    const firebase = user.pushFirebaseNotifications(['FCM_TOKEN'], 'test', 'You have received a new request' );
+    user.pushFirebaseNotifications(['FCM_TOKEN'], 'test', 'You have received a new request' ).then(() => {console.log("Firebase Message Pushed")});;
     
 push slack notification, you need a webhook url to be set while configuring the server, for more information [click here](https://api.slack.com/messaging/webhooks)
 
-    const slack = user.pushSlackMessage('You have received a new request');
-
-If you want to wait to get a response of the functions run the following
-
-    Promise.all([publish,publish2,firebase,slack,token]).then(res => {
-        console.log(res);
-    })
-    
+    user.pushSlackMessage('You have received a new request').then(() => {console.log("Slack Message Pushed")});;
 
 
 ### Run WebSocket Server:
 
 Make sure redis is up and running, in terminal type: `redis-server`
-create your `server.js` file (see examples websocket.js)
+create your `server.js` file (see examples/websocket.js)
 create your jwt RS256 key pairs and set the path in the options object. 
 
 **Create RS256 key pairs on Unix-like OS**
