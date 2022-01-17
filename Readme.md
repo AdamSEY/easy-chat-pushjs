@@ -27,34 +27,69 @@ it's not supposed to be available for public, so some segments might be ambiguou
 - Install ZMQ [required to push notifications to the websocket server] [learn more](https://zeromq.org/download/)
 
 
-### How to create the authentication token to connect to the websocket server? 
+### Create JWT Token to connect to the server [frontend]
+
+
+#### create a JWT private and public key
+
+**Create RS256 key pairs on Unix-like OS**
+
+    ssh-keygen -t rsa -b 4096 -m PEM -f jwtRS256.key
+    openssl rsa -in jwtRS256.key -pubout -outform PEM -out jwtRS256.key.pub
+
+#### create users' authentication tokens [SERVER-SIDE][REST]
 
     const {User} = require('easy-chat-pushjs');
     const path = require('path');
 
     const user = new User({
-        version: 1.0, // used to invalidate the old tokens (must match the server version)
-        jwtPrivateKey: path.dirname(__dirname) + '/private.key', // absoulte path to the "jwt private key", used to encrypt the token.
-        slackURL: "https://hooks.slack.com/services/EXAMPLE/....",
+        version: 1.0,
+        jwtPrivateKey: path.dirname(__dirname) + '/private.key',
     });
+    // version: used to invalidate the old tokens (must match the server version)
+    // jwtPrivateKey: absoulte path to the jwt private key, used to encrypt the token.
+    // slackURL: If you want to push notifications to slack (optional)
 
-    const token = user.createUserToken(['gender', 'male'] , "CHAT_ROOM_NAME", '<USER_ID>', "188.22.34.33",'signalling_room');
+    const token = user.createUserToken([ARRAY_OF_ROOMS] ,"<PUBLISH_ROOM>" , '<USER_ID>', "<UNIQUE_ID>");
+
+    // ARRAY_OF_ROOMS: (optional) array of rooms 
+    // CHAT_ROOM: (optional) users can publish via socket.io frontend-side only to this channel.
+    // USER_ID: (optional) used to push notifications to a speicifc user.
+    // UNIQUE_ID: (optional) used to disallow multiple connections could be a user IP e.g. 188.22.34.33
     
-Now, you have to send this token to your user, see examples/client -> token: this token
-Once your clients connected to your websocket server, you're good to start pushing notifications
 
-### Push notifications example
+    
+*TIP: Check examples/client for more information about using this token*
 
-Now if you'd like to push a message to all the clients who are connected to 'gender' you do the following
+Once your clients are connected to your websocket server, you're good to start pushing notifications
+
+### Run and create the websocket server:
+
+Make sure redis is up and running, in terminal type: `sudo service redis start`
+
+create your jwt RS256 key pairs and set the path in the options object.
+
+create your `server.js` file (see examples/websocket.js)
+
+Run your `server.js` by calling `node server.js`
+
+
+
+### Push notifications to connected clients
+
+**Now we assume your clients have connected to the websocket server and they're ready to receive socket messages.**
+
+if you'd like to push a message to all the clients who are connected to 'gender' you do the following
 
     const {User} = require('easy-chat-pushjs');
     const path = require('path');
 
     const user = new User({
-        version: 1.0, // used to invalidate the old tokens (must match the server version)
-        jwtPrivateKey: path.dirname(__dirname) + '/private.key', // absoulte path to the "jwt private key", used to encrypt the token.
+        version: 1.0, 
+        jwtPrivateKey: path.dirname(__dirname) + '/private.key', 
         slackURL: "https://hooks.slack.com/services/EXAMPLE/....",
     });
+
     user.pushNotification('gender', {message: 'hello there'}).then(() => {console.log("Message Pushed")});
     
     
@@ -71,23 +106,6 @@ push slack notification, you need a webhook url to be set while configuring the 
 
     user.pushSlackMessage('You have received a new request').then(() => {console.log("Slack Message Pushed")});;
 
-
-### Run WebSocket Server:
-
-Make sure redis is up and running, in terminal type: `redis-server`
-create your `server.js` file (see examples/websocket.js)
-create your jwt RS256 key pairs and set the path in the options object. 
-
-**Create RS256 key pairs on Unix-like OS**
-    
-    ssh-keygen -t rsa -b 4096 -m PEM -f jwtRS256.key
-    openssl rsa -in jwtRS256.key -pubout -outform PEM -out jwtRS256.key.pub
-
-Run your `server.js` by calling `forever server.js`
-
-**You may need to install forever (npm i forever -g)**
-
-optionally you can enable FCM and Slack API if you're planning to use them.
 
 ### Nginx Setup Proxy
 
