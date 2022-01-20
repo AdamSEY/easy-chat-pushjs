@@ -25,9 +25,7 @@ Get your advanced chat and pushjs server ready in minutes
 ### Docker
 
 ```
-$ git clone https://github.com/AdamSEY/easy-chat-pushjs
-
-$ cd docker
+$ git clone https://github.com/AdamSEY/easy-chat-pushjs && cd easy-chat-pushjs/docker
 
 ```
 
