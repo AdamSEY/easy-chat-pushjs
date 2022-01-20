@@ -29,6 +29,7 @@
     "why-is-node-running": "^2.2.0"
   },
   "scripts": {
+    "start": "pm2 start server.js && pm2 logs server --raw",
     "build": "tsc",
     "test": "mocha",
     "prepare": "npm run build",

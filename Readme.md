@@ -1,41 +1,70 @@
-# This package is still under development and made for paidtabs.com & ziggs.io
-it's not supposed to be available for public, so some segments might be ambiguous.
+# Easy-chat-pushjs
 
-## Your PRs are really appreciated
+Get your advanced chat and pushjs server ready in minutes
 
-### Features
+## Features
 
 - Compatible with Socket.io version 3
-- Peer 2 Peer chat via webRTC
-- Serverless authentication, JWT
+- Serverless authentication (JWT)
 - Push messages to Slack
-- Limit connection times by user IP or UserID [ see uniqueToken -> createUserToken Function ]
-- User can publish to specific rooms.
-- Subscribe to multiple rooms e.g. gender, male...
-- Firebase cloud messaging notifications (push notifications to mobile phones). 
-- Client & server can be on separate servers. *zmq should listen to 0.0.0.0 instead of 127.0.0.1*
+- Limit connection times by client's IP address or UserID (unqiueToken)
+- Clients can publish to specific rooms.
+- Join multiple rooms
+- Firebase cloud messaging notifications (push notifications to mobile phones).
+- Client & server can be on separate servers.
+- Peer 2 Peer chat via webRTC (beta)
 
-
-### npm Installation
+## npm Installation
 
     npm install --save easy-chat-pushjs
 
 
-### Server Installation
+## Server Setup
 
-- Install redis [required for onlyOneConnection feature] [learn more](https://www.digitalocean.com/community/tutorials/how-to-install-and-secure-redis-on-ubuntu-18-04)       
+
+### Docker
+
+```
+$ git clone https://github.com/AdamSEY/easy-chat-pushjs
+
+$ cd docker
+
+```
+
+Create your RS256 private and public keys used for JWT authentication between the server and the client.
+We only need the public key for the server. You will need the private key to create JWT tokens for authentication.
+
+```
+
+ssh-keygen -t rsa -b 4096 -m PEM -f jwtRS256.key && openssl rsa -in jwtRS256.key -pubout -outform PEM -out jwtRS256.key.pub
+
+```
+
+If you want to use firebase cloud messaging notifications, add your firebase_admin_sdk.json to the directory.
+
+PS: You can get this file from firebase -> settings -> Service Account -> Firebase admin sdk.
+
+
+now you're ready to start the server
+
+```
+docker-compose up
+```
+
+### From scratch
+
+
+- Install redis [required for onlyOneConnection feature] [learn more](https://www.digitalocean.com/community/tutorials/how-to-install-and-secure-redis-on-ubuntu-18-04)
 - Install ZMQ [required to push notifications to the websocket server] [learn more](https://zeromq.org/download/)
 
 
-### Create JWT Token to connect to the server [frontend]
 
+#### Create JWT Token to connect to the server [frontend]
 
-#### create a JWT private and public key
+Create RS256 key pairs on Unix-like OS
 
-**Create RS256 key pairs on Unix-like OS**
+    ssh-keygen -t rsa -b 4096 -m PEM -f jwtRS256.key && openssl rsa -in jwtRS256.key -pubout -outform PEM -out jwtRS256.key.pub
 
-    ssh-keygen -t rsa -b 4096 -m PEM -f jwtRS256.key
-    openssl rsa -in jwtRS256.key -pubout -outform PEM -out jwtRS256.key.pub
 
 #### create users' authentication tokens [SERVER-SIDE][REST]
 
@@ -56,9 +85,9 @@ it's not supposed to be available for public, so some segments might be ambiguou
     // CHAT_ROOM: (optional) users can publish via socket.io frontend-side only to this channel.
     // USER_ID: (optional) used to push notifications to a speicifc user.
     // UNIQUE_ID: (optional) used to disallow multiple connections could be a user IP e.g. 188.22.34.33
-    
 
-    
+
+
 *TIP: Check examples/client for more information about using this token*
 
 Once your clients are connected to your websocket server, you're good to start pushing notifications
@@ -91,17 +120,17 @@ if you'd like to push a message to all the clients who are connected to 'gender'
     });
 
     user.pushNotification('gender', {message: 'hello there'}).then(() => {console.log("Message Pushed")});
-    
-    
+
+
 Send a message to a specific user based on token's userId.
 
     user.pushNotification(null, {message: hello} , '<USER_ID>').then(() => {console.log("Message Pushed")});;
-    
-    
+
+
 push a firebase notification, take a look at the following [link](https://developers.google.com/web/ilt/pwa/introduction-to-push-notifications) if you want to know how to get a browser token.
 
     user.pushFirebaseNotifications(['FCM_TOKEN'], 'test', 'You have received a new request' ).then(() => {console.log("Firebase Message Pushed")});;
-    
+
 push slack notification, you need a webhook url to be set while configuring the server, for more information [click here](https://api.slack.com/messaging/webhooks)
 
     user.pushSlackMessage('You have received a new request').then(() => {console.log("Slack Message Pushed")});;
