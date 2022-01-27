@@ -39,3 +39,4 @@ COPY $firebase_sdk_admin_json /etc/easy-chat-pushjs/config/firebase_admin_sdk.js
 WORKDIR /etc/easy-chat-pushjs/src
 ENTRYPOINT ["/etc/easy-chat-pushjs/scripts/entrypoint.sh"]
 
+EXPOSE 5511:5511
