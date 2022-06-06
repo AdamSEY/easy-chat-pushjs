@@ -21,7 +21,7 @@ export class User {
         // defaults
         // @ts-ignore
         this.options = {}
-        this.options.zmqClientAddress = 'tcp://127.0.0.1:3500';
+        this.options.zmqClientAddress = 'tcp://127.0.0.1:3500'; // for multiple hosts, separate with comma.
         this.options.jwtExpireSeconds = 365 * 24 * 60 * 60;
         this.options.version = 1.0; // used to invalidate old tokens when you want. if client version different than this. authenacation will fail.
         //
@@ -75,17 +75,21 @@ export class User {
 
         return new Promise((resolve, reject) => {
             try {
-                const sock = zmq.socket('push');
-                sock.connect(this.options.zmqClientAddress);
-                sock.send(
-                    JSON.stringify({
-                        roomName,
-                        userId,
-                        data: data,
-                    }),
-                );
-                sock.setsockopt('linger', 10000);
-                sock.close();
+                const zmqAddresses = this.options.zmqClientAddress ? this.options.zmqClientAddress.split(',') : [this.options.zmqClientAddress];
+
+                for (const zmqAddress of zmqAddresses) {
+                    const sock = zmq.socket('push');
+                    sock.connect(zmqAddress);
+                    sock.setsockopt('linger', 10000);
+                    sock.send(
+                        JSON.stringify({
+                            roomName,
+                            userId,
+                            data,
+                        }),
+                    );
+                    sock.close();
+                }
                 return resolve('Message Queued');
             } catch (e) {
                 return reject(e);
@@ -133,6 +137,6 @@ export class User {
     static validateRoomName(roomName: string) {
         // /^([0-9a-z_]+\.)*([0-9a-z_]+)$/
         const regex = new RegExp(/^([0-9a-z_]+\.)*([0-9a-z_]+)$/);
-        return !!regex.test(roomName);
+        return regex.test(roomName);
     }
 }

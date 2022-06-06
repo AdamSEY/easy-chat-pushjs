@@ -6,6 +6,8 @@ const firebaseSdkPath = '/etc/easy-chat-pushjs/config/firebase_admin_sdk.json';
 const jwtPublicKey = '/etc/easy-chat-pushjs/config/jwtRS256.key.pub';
 
 const config = {
+    // zmqServerAddress: 'tcp://0.0.0.0:3500', // in case you want to connect to the server from another machine.
+    // Not secure. Use firewall to allow access only from private/trusted IP addresses to the port.
     version: version ? version : '1.0',
     jwtPublicKey: jwtPublicKey,
     wsPort: 5511,

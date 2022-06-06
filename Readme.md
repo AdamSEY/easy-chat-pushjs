@@ -72,6 +72,9 @@ Create RS256 key pairs on Unix-like OS
     const user = new User({
         version: 1.0,
         jwtPrivateKey: path.dirname(__dirname) + '/private.key',
+        zmqClientAddress: 'tcp://server_zmq_address:3500,tcp://server_zmq_address2:3500',
+        // you can publish to multiple websocket servers at once. add your servers ZMQ servers addresses separated by comma.
+        // if the Websocket Server is installed on this server, you can use 127.0.0.1:3500 or remove the line.
     });
     // version: used to invalidate the old tokens (must match the server version)
     // jwtPrivateKey: absoulte path to the jwt private key, used to encrypt the token.
