@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # fetch new updates on docker restarts
- git pull
+git pull
 ls -a
 
 yarn install --save --no-progress

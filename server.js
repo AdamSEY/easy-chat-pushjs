@@ -1,14 +1,15 @@
 const { Server } = require('./lib/Server');
 const fs = require('fs');
 
-const { version, FIREBASE_DATABASE_URL } = process.env;
+const { VERSION, FIREBASE_DATABASE_URL, ZMQ_ADDRESS } = process.env;
 const firebaseSdkPath = '/etc/easy-chat-pushjs/config/firebase_admin_sdk.json';
 const jwtPublicKey = '/etc/easy-chat-pushjs/config/jwtRS256.key.pub';
 
 const config = {
     // zmqServerAddress: 'tcp://0.0.0.0:3500', // in case you want to connect to the server from another machine.
     // Not secure. Use firewall to allow access only from private/trusted IP addresses to the port.
-    version: version ? version : '1.0',
+    zmqServerAddress: ZMQ_ADDRESS !== 'null' ? ZMQ_ADDRESS : 'tcp://127.0.0.1:3500',
+    version: VERSION ? VERSION : 1.0,
     jwtPublicKey: jwtPublicKey,
     wsPort: 5511,
     onUserDisconnects: (userInfo) => { console.log('user disconnected', { userInfo }) },

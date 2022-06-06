@@ -47,7 +47,7 @@ PS: You can get this file from firebase -> settings -> Service Account -> Fireba
 now you're ready to start the server
 
 ```
-docker-compose up
+sudo docker-compose up -d
 ```
 
 ### From scratch
