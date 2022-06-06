@@ -13,7 +13,8 @@ Get your advanced chat and pushjs server ready in minutes
 - Firebase cloud messaging notifications (push notifications to mobile phones).
 - Client & server can be on separate servers.
 - Peer 2 Peer chat via webRTC (beta)
-
+- Docker
+- Scaling to multiple servers for the same app.  
 ## npm Installation
 
     npm install --save easy-chat-pushjs
