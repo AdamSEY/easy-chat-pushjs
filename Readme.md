@@ -38,10 +38,10 @@ We only need the public key for the server. You will need the private key to cre
 ssh-keygen -t rsa -b 4096 -m PEM -f jwtRS256.key && openssl rsa -in jwtRS256.key -pubout -outform PEM -out jwtRS256.key.pub
 
 ```
-
-If you want to use firebase cloud messaging notifications, add your firebase_admin_sdk.json to the directory.
-
-PS: You can get this file from firebase -> settings -> Service Account -> Firebase admin sdk.
+**Docker-compose.yaml edits**
+If you want to use firebase cloud messaging notifications, add firebaseApiKey while starting the server.
+If your application (client) will be on a different server other than the websocket server, let ZMQ listen to 0.0.0.0:3500 (check docker-compose.yaml file).
+if you're doing so, make sure to restrict connections to your server to only the IP address of the client.
 
 
 now you're ready to start the server

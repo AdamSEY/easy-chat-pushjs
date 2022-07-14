@@ -1,7 +1,6 @@
 FROM ubuntu:20.04
 ARG DEBIAN_FRONTEND=noninteractive
 ARG jwt_public_key
-ARG firebase_sdk_admin_json
 RUN apt update && apt install -y tzdata
 ENV TZ=UTC/utc
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
@@ -34,7 +33,6 @@ RUN chmod +x /etc/easy-chat-pushjs/scripts/*.sh
 
 # config files
 COPY $jwt_public_key /etc/easy-chat-pushjs/config/jwtRS256.key.pub
-COPY $firebase_sdk_admin_json /etc/easy-chat-pushjs/config/firebase_admin_sdk.json
 
 WORKDIR /etc/easy-chat-pushjs/src
 ENTRYPOINT ["/etc/easy-chat-pushjs/scripts/entrypoint.sh"]

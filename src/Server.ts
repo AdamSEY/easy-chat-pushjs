@@ -13,8 +13,7 @@ const fs = require('fs');
 
 
 interface optionsObj {
-    firebaseDatabaseURL?:  string;
-    firebaseAdminSdkPath?:  string;
+    firebaseApiKey?:  string;
     onMessageReceived?: Function;
     jwtPublicKey: Buffer;
     version?: number;
@@ -43,6 +42,7 @@ export class Server {
         this.options.pingTimeout = 5000;
         this.options.onlyOneConnection = false; // either you want to allow users to connect multiple times using the same token.
         this.options.version = 1.0; // used to invalidate old tokens when you want. if client version different than this. authentication will fail.
+        this.options.firebaseApiKey = undefined;
         // override options
         if (options && typeof options === 'object') {
             for (const option in options) {
@@ -142,8 +142,8 @@ export class Server {
             cookie: true,
         });
         let fcm: Firebase;
-        if (this.options.firebaseDatabaseURL && this.options.firebaseAdminSdkPath) {
-            fcm = new Firebase(this.options.firebaseAdminSdkPath, this.options.firebaseDatabaseURL);
+        if (this.options.firebaseApiKey) {
+            fcm = new Firebase(this.options.firebaseApiKey);
         }
 
         // receiving events from ZMQ
@@ -223,8 +223,8 @@ export class Server {
             }
 
             // sending fcm notification
-            if (fcm && serverMessage.hasOwnProperty('fcmTokens')) {
-                const d = fcm.sendMessage(
+            if (this.options.firebaseApiKey && serverMessage.hasOwnProperty('fcmTokens')) {
+                fcm.sendMessage(
                     serverMessage.fcmTokens,
                     serverMessage.title,
                     serverMessage.body,
@@ -232,6 +232,8 @@ export class Server {
                     serverMessage.data,
                 );
                 console.log('fcm message queued');
+
+                // todo send FCM message.
             }
             console.log({ ZMQ: 'zmq message received', serverMessage });
         });

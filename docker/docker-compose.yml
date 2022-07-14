@@ -5,7 +5,6 @@ services:
       context: ./
       args:
         jwt_public_key: "jwtRS256.key.pub" # required for authentication between client and server.
-        firebase_sdk_admin_json: "firebase_admin_sdk.json" # firebase authentication (optional) If not needed, set an empty file instead.
     restart: "always"
     ports:
       - "5511:5511" # websocket server

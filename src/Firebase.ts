@@ -1,21 +1,8 @@
-import * as admin from "firebase-admin";
-import BatchResponse = admin.messaging.BatchResponse;
-
 export default class {
-  private readonly firebaseAdminSdkPath: string;
-  private readonly databaseURL: string;
+  private readonly firebaseApiKey: string;
 
-  constructor(firebaseAdminSdkPath: string, databaseURL: string) {
-    this.firebaseAdminSdkPath = firebaseAdminSdkPath;
-    this.databaseURL = databaseURL;
-    this.init();
-  }
-  init() {
-    const serviceAccount = require(this.firebaseAdminSdkPath);
-    admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount),
-      databaseURL: this.databaseURL,
-    });
+  constructor(firebaseApiKey: string) {
+    this.firebaseApiKey = firebaseApiKey;
   }
   sendMessage(
       tokens: Array<string>,
@@ -24,38 +11,40 @@ export default class {
               imageUrl: string | undefined = undefined,
               extras?: { [key: string]: string; }
     ) {
-    const message = {
-      data: extras,
-      notification: {
-        title: title,
-        body: body,
+
+
+    const axios = require('axios');
+    const data = JSON.stringify({
+      "registration_ids": [...tokens],
+      "notification": {
+        "title": title,
+        "body": body,
+        "imageUrl": imageUrl,
+        "content_available" : true,
+        "sound":"default",
+        ...extras
+      }
+    });
+
+    const config = {
+      method: 'post',
+      url: 'https://fcm.googleapis.com/fcm/send',
+      headers: {
+        'Authorization': 'key=' + this.firebaseApiKey,
+        'Content-Type': 'application/json'
       },
-      webpush: {
-        headers: {
-          Urgency: 'high',
-        },
-        notification: {
-          body: body,
-          requireInteraction: true,
-          icon: imageUrl,
-        },
-      },
-      tokens: tokens,
+      data : data
     };
 
-    console.log(message.notification);
-    return new Promise((resolve, reject) => {
-      admin
-        .messaging()
-        .sendMulticast(message)
-        .then((response: BatchResponse) => {
-          console.log(response.successCount + ' messages were sent successfully');
-          return resolve(response);
+    axios(config)
+        .then(function (response: any) {
+          console.log(JSON.stringify(response.data));
         })
-        .catch((e: any) => {
-          console.log('Failed to send FCM message', e);
-          return reject(e);
+        .catch(function (error: any) {
+          console.log(error);
         });
-    });
+
+
+
   }
 }
