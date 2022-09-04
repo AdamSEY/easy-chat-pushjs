@@ -15,14 +15,36 @@ export default class {
 
     const axios = require('axios');
     const data = JSON.stringify({
+      ...extras,
       "registration_ids": [...tokens],
       "notification": {
         "title": title,
         "body": body,
-        "imageUrl": imageUrl,
         "content_available" : true,
+        "priority" : "high",
         "sound":"default",
-        ...extras
+        "imageUrl": imageUrl,
+        "image": imageUrl
+      },
+      "android": {
+        "notification": {
+          "imageUrl": imageUrl
+        }
+      },
+      "apns": {
+        "payload": {
+          "aps": {
+            "mutable-content": 1
+          }
+        },
+        "fcm_options": {
+          "image": imageUrl
+        }
+      },
+      "webpush": {
+        "headers": {
+          "image": imageUrl
+        }
       }
     });
 
