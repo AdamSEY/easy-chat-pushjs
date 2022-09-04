@@ -1,6 +1,6 @@
 {
   "name": "easy-chat-pushjs",
-  "version": "3.5.0",
+  "version": "3.6.0",
   "description": "Push Notifications using websockets, supports FCM, Slack and P2P.",
   "main": "lib/index.js",
   "author": "",
