@@ -8,22 +8,22 @@ export default class {
       tokens: Array<string>,
               title: string,
               body: string,
+              subtitle: string | undefined,
               imageUrl: string | undefined = undefined,
               extras?: { [key: string]: string; }
     ) {
 
 
     const axios = require('axios');
-    const data = JSON.stringify({
+    const object = {
       ...extras,
       "registration_ids": [...tokens],
       "notification": {
         "title": title,
         "body": body,
+        "subtitle": subtitle,
         "content_available" : true,
-        "priority" : "high",
         "sound":"default",
-        "imageUrl": imageUrl,
         "image": imageUrl
       },
       "android": {
@@ -34,11 +34,19 @@ export default class {
       "apns": {
         "payload": {
           "aps": {
-            "mutable-content": 1
+            "mutable-content": "1",
+            "content-available": "true"
+          },
+          "imageUrl": imageUrl,
+          "fcm_options": {
+            "imageUrl": imageUrl
           }
         },
-        "fcm_options": {
-          "image": imageUrl
+        "headers": {
+          "mutable-content": "1",
+          "apns-push-type": "background",
+          "apns-priority": "5",
+          "apns-topic": "com.paidtabs"
         }
       },
       "webpush": {
@@ -46,7 +54,8 @@ export default class {
           "image": imageUrl
         }
       }
-    });
+    }
+    const data = JSON.stringify(object);
 
     const config = {
       method: 'post',
