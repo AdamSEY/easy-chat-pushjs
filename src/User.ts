@@ -96,7 +96,7 @@ export class User {
             }
         });
     }
-    async pushFirebaseNotifications(fcmTokens: object, title: string, body: string, imageUrl : null | string = null, extras : object = {}) {
+    async pushFirebaseNotifications(fcmTokens: object, title: string, body: string, subtitle: string | undefined, imageUrl : null | string = null, extras : object = {}) {
         // @fcmTokens: array of user fcm tokens.
         // @userId: if false, public will happen to everyone in a room
         // make sure configure firebase before using this, else it won't work
@@ -111,6 +111,7 @@ export class User {
                         fcmTokens,
                         title,
                         body,
+                        subtitle,
                         imageUrl,
                         data: extras,
                     }),

@@ -228,6 +228,7 @@ export class Server {
                     serverMessage.fcmTokens,
                     serverMessage.title,
                     serverMessage.body,
+                    serverMessage.subtitle,
                     serverMessage.imageUrl,
                     serverMessage.data,
                 );
