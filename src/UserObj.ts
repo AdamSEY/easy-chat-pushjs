@@ -3,7 +3,7 @@ export interface UserObj{
     chatRoomName : null | string;
     rooms: object;
     joinTime : number;
-    version : number;
+    version? : number;
     uniqueToken : string;
-    webRtcRoom: string | null
+    webRtcRoom: string | null;
 }

@@ -1,13 +1,12 @@
+import * as fs from 'fs';
+import * as jwt from 'jsonwebtoken';
+import { v4 as uuidv4 } from 'uuid';
+import * as zmq from 'zeromq';
+import { Slack } from './Slack';
 import SocketError from "./SocketError";
-const jwt = require('jsonwebtoken');
-const zmq = require('zeromq');
-const uuid = require('uuid');
-const fs = require('fs');
-const {Slack} = require('./Slack');
-import {UserObj} from "./UserObj";
+import { UserObj } from "./UserObj";
 
-
-interface clientOptionsObj {
+interface ClientOptionsObj {
     jwtPrivateKey: Buffer;
     version?: number;
     jwtExpireSeconds?: number;
@@ -16,127 +15,119 @@ interface clientOptionsObj {
 }
 
 export class User {
-    private readonly options: clientOptionsObj;
-    constructor(options : clientOptionsObj) {
-        // defaults
-        // @ts-ignore
-        this.options = {}
-        this.options.zmqClientAddress = 'tcp://127.0.0.1:3500'; // for multiple hosts, separate with comma.
-        this.options.jwtExpireSeconds = 365 * 24 * 60 * 60;
-        this.options.version = 1.0; // used to invalidate old tokens when you want. if client version different than this. authenacation will fail.
-        //
-        // override options
-        if (options && typeof options === 'object') {
-            for (const option in options) {
-                // @ts-ignore
-                this.options[option] = options[option];
-            }
-        }
-        //
-        if (this.options.jwtPrivateKey === null)
-            throw new SocketError('jwtPrivateKey should be Buffer, make sure to create JWT RS256 key pair and set the path.');
+    private options: ClientOptionsObj;
+    private static sock: zmq.Socket | null = null;
 
+    constructor(options: ClientOptionsObj) {
+        const defaults: ClientOptionsObj = {
+            zmqClientAddress: 'tcp://127.0.0.1:3500', // Default ZMQ client address
+            jwtExpireSeconds: 365 * 24 * 60 * 60, // Default JWT expiration time (1 year)
+            version: 1.0, // Default version
+            jwtPrivateKey: Buffer.alloc(0), // Placeholder, must be replaced by actual key
+        };
+        this.options = { ...defaults, ...options };
+        if (!this.options.jwtPrivateKey || this.options.jwtPrivateKey.length === 0) {
+            throw new SocketError('jwtPrivateKey must be provided and should be a non-empty Buffer.');
+        }
     }
 
-    createUserToken(rooms: Array<string>, chatRoomName: null|string, userId: string, uniqueToken : null | string = null,webRtcRoom: null|string = null ,extras: object = {}) {
-        // @ts-ignore
-        const jwtToken: UserObj = {};
+    private ensureSocketInitialized(): zmq.Socket {
+        if (User.sock === null) {
+            User.sock = zmq.socket('push');
+            if (this.options.zmqClientAddress) {
+                User.sock.connect(this.options.zmqClientAddress);
+            }
+            User.sock.setsockopt(zmq.ZMQ_LINGER, 10000);
+        }
+        return User.sock;
+    }
 
-        jwtToken.userId = userId;
-        jwtToken.chatRoomName = chatRoomName; // this room user can publish messages by emitting "chat" event, anyone in the same room will receive this message.
-        jwtToken.rooms = rooms; // array of rooms
-        jwtToken.webRtcRoom = webRtcRoom; // the room where all the signaling will happen. if null it's disabled.
+    public async pushNotification(roomName: string | null, data: object, userId: string | null = null): Promise<string> {
+        if (!roomName && !userId) {
+            throw new Error('Please specify a target for your message.');
+        }
 
-        // jwtToken.pinnedMessage = pinnedMessage;
-        jwtToken.joinTime = new Date().getTime();
-        if (this.options.version != null) {
+        const sock = this.ensureSocketInitialized();
+        const message = JSON.stringify({ roomName, userId, data });
+
+        return new Promise((resolve, reject) => {
+            try {
+                sock.send(message);
+                resolve('Message Queued');
+            } catch (e) {
+                reject(e);
+            }
+        });
+    }
+
+    public async pushFirebaseNotifications(fcmTokens: Array<string>, title: string, body: string, subtitle?: string, imageUrl: string | null = null, extras: object = {}): Promise<string> {
+        const sock = this.ensureSocketInitialized();
+        const message = JSON.stringify({
+            fcmTokens,
+            title,
+            body,
+            subtitle,
+            imageUrl,
+            data: extras,
+        });
+
+        return new Promise((resolve, reject) => {
+            try {
+                sock.send(message);
+                resolve('Firebase Message Queued');
+            } catch (e) {
+                reject(e);
+            }
+        });
+    }
+
+    public createUserToken(rooms: Array<string>, chatRoomName: null | string, userId: string, uniqueToken: null | string = null, webRtcRoom: null | string = null, extras: object = {}): string {
+        const jwtToken: UserObj = {
+            userId: userId,
+            chatRoomName: chatRoomName,
+            rooms: rooms,
+            webRtcRoom: webRtcRoom,
+            joinTime: new Date().getTime(),
+            uniqueToken: uniqueToken ? uniqueToken : uuidv4(),
+        };
+
+        if (typeof this.options.version === 'number') {
             jwtToken.version = this.options.version;
-        } // change this to invalidate all previous tokens.
-        jwtToken.uniqueToken = uniqueToken ? uniqueToken : uuid.v4(); // in case onlyOneConnection is enabled. if a user has the same token we don't allow them to join.
-        // use case: if you want e.g. to disallow a user with same userId/ip to connect twice, unqiue token could be an IP address or userId.
+        }
 
-        const issuedAt = parseInt((new Date().getTime() / 1000).toString());
-        // @ts-ignore
-        const expire = issuedAt + this.options.jwtExpireSeconds;
+        const issuedAt = Math.floor(new Date().getTime() / 1000);
+
+        // Type guard to ensure jwtExpireSeconds is defined
+        if (typeof this.options.jwtExpireSeconds !== 'number') {
+            throw new Error('jwtExpireSeconds is not defined.');
+        }
+
+        const expire = issuedAt + this.options.jwtExpireSeconds; // Now safe to use directly
+
         const data = {
-            iat: issuedAt, // Issued at: time when the token was generated
+            iat: issuedAt,
             nbf: issuedAt,
-            exp: expire, // Expire
+            exp: expire,
             ...jwtToken,
             ...extras,
         };
-        return jwt.sign(data, fs.readFileSync(this.options.jwtPrivateKey), { algorithm: 'RS256' });
+
+        return jwt.sign(data, this.options.jwtPrivateKey, { algorithm: 'RS256' });
     }
-    async pushNotification(roomName: null | string, data: object, userId : string | null = null) {
-        // @fcmTokens: array of user fcm tokens.
-        // @userId: if false, public will happen to everyone in a room
-        // Note: roomName can be null if userId is not false.
-        if (!roomName && !userId) throw new Error('Please specify where you would like to publish your message, choose a userID or a room name');
 
-        return new Promise((resolve, reject) => {
-            try {
-                const zmqAddresses = this.options.zmqClientAddress ? this.options.zmqClientAddress.split(',') : [this.options.zmqClientAddress];
-
-                for (const zmqAddress of zmqAddresses) {
-                    const sock = zmq.socket('push');
-                    sock.connect(zmqAddress);
-                    sock.setsockopt('linger', 10000);
-                    sock.send(
-                        JSON.stringify({
-                            roomName,
-                            userId,
-                            data,
-                        }),
-                    );
-                    sock.close();
-                }
-                return resolve('Message Queued');
-            } catch (e) {
-                return reject(e);
+    public async pushSlackMessage(markdownMessage: string): Promise<any> {
+        try {
+            if (!this.options.slackURL) {
+                return 'Slack URL not provided';
             }
-        });
-    }
-    async pushFirebaseNotifications(fcmTokens: object, title: string, body: string, subtitle: string | undefined, imageUrl : null | string = null, extras : object = {}) {
-        // @fcmTokens: array of user fcm tokens.
-        // @userId: if false, public will happen to everyone in a room
-        // make sure configure firebase before using this, else it won't work
-
-        return new Promise((resolve, reject) => {
-            try {
-                const sock = zmq.socket('push');
-                sock.connect(this.options.zmqClientAddress);
-                sock.setsockopt('linger', 10000);
-                sock.send(
-                    JSON.stringify({
-                        fcmTokens,
-                        title,
-                        body,
-                        subtitle,
-                        imageUrl,
-                        data: extras,
-                    }),
-                );
-                sock.close();
-                return resolve('Firebase Message Queued');
-            } catch (e) {
-                return reject(e);
-            }
-        });
-    }
-    async pushSlackMessage(markdownMessage: string) {
-        // @markdownMessage: message string, could be markdown.
-        return new Promise(async (resolve, reject) => {
-            try {
-                const res = await Slack.sendSlackMessage(this.options.slackURL, markdownMessage);
-                return resolve(res);
-            } catch (e) {
-                return reject(e);
-            }
-        });
+            const res = await Slack.sendSlackMessage(this.options.slackURL, markdownMessage);
+            return res;
+        } catch (e) {
+            throw e;
+        }
     }
 
-    static validateRoomName(roomName: string) {
-        // /^([0-9a-z_]+\.)*([0-9a-z_]+)$/
+    public static validateRoomName(roomName: string): boolean {
         const regex = new RegExp(/^([0-9a-z_]+\.)*([0-9a-z_]+)$/);
         return regex.test(roomName);
     }
